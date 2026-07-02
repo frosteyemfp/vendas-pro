@@ -1,10 +1,34 @@
 @import "tailwindcss";
 
-/* Força o Tailwind v4 a escutar a classe .dark injetada pelo React no HTML */
-@variant dark (&:where(.dark, .dark *));
+/* Base global do sistema SaaS */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+  background-color: #0a0a0a;
+}
 
-@layer base {
-  html.dark {
-    color-scheme: dark;
-  }
+/* Smooth transitions global */
+* {
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+/* Scroll mais limpo */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #333;
+  border-radius: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Dark mode base (usando classe dark do seu AuthContext) */
+.dark body {
+  background-color: #09090b;
 }

@@ -6,42 +6,74 @@ import { useAuth } from "../context/AuthContext";
 export default function Sidebar() {
   const navigate = useNavigate();
   const { darkMode, toggleTheme } = useAuth();
-  const [isOpen, setIsOpen] = useState(false);
+  const [open, setOpen] = useState(false);
 
-  async function handleLogout() {
+  async function logout() {
     await supabase.auth.signOut();
     navigate("/login");
   }
 
   return (
     <>
-      <button onClick={() => setIsOpen(!isOpen)} className="md:hidden fixed top-4 left-4 z-50 p-2 rounded-md bg-indigo-600 text-white shadow-md">
-        {isOpen ? "✕" : "☰"}
+      <button
+        onClick={() => setOpen(!open)}
+        className="md:hidden fixed top-4 left-4 z-50 bg-indigo-600 text-white p-2 rounded"
+      >
+        ☰
       </button>
 
-      <aside className={`fixed inset-y-0 left-0 z-40 w-64 bg-slate-900 dark:bg-zinc-900 text-white p-6 flex flex-col justify-between transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static ${isOpen ? "translate-x-0" : "-translate-x-full"}`}>
-        <div>
-          <h2 className="text-xl font-bold text-indigo-400 mb-8">Vendas Pro 🚀</h2>
-          <nav className="flex flex-col gap-2">
-            <Link to="/" className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 dark:hover:bg-zinc-800 transition-colors">📊 Dashboard</Link>
-            <Link to="/products" className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 dark:hover:bg-zinc-800 transition-colors">📦 Produtos</Link>
-            <Link to="/categories" className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 dark:hover:bg-zinc-800 transition-colors">🏷️ Categorias</Link>
-            <Link to="/sales" className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 dark:hover:bg-zinc-800 transition-colors">💰 Vendas</Link>
-            <Link to="/settings" className="flex items-center gap-3 p-3 rounded-lg hover:bg-slate-800 dark:hover:bg-zinc-800 transition-colors">⚙️ Configurações</Link>
-          </nav>
-        </div>
+      <aside className={`fixed md:static w-64 h-screen bg-zinc-900 text-white p-5 transition-transform z-40 ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}`}>
 
-        <div className="flex flex-col gap-4">
-          <button onClick={toggleTheme} className="w-full text-center p-2 rounded-lg bg-slate-800 dark:bg-zinc-800 text-sm font-medium hover:bg-slate-700 dark:hover:bg-zinc-700 border border-slate-700 dark:border-zinc-700 text-white">
-            {darkMode ? "☀️ Modo Claro" : "🌙 Modo Escuro"}
+        <h1 className="text-xl font-bold mb-6 text-indigo-400">
+          SaaS Vendas
+        </h1>
+
+        <nav className="flex flex-col gap-2 text-sm">
+
+          <Link to="/" className="p-2 rounded hover:bg-zinc-800">
+            📊 Dashboard
+          </Link>
+
+          <Link to="/sales" className="p-2 rounded hover:bg-zinc-800">
+            💰 Vendas (PDV)
+          </Link>
+
+          <Link to="/products" className="p-2 rounded hover:bg-zinc-800">
+            📦 Produtos
+          </Link>
+
+          <Link to="/categories" className="p-2 rounded hover:bg-zinc-800">
+            🏷️ Categorias
+          </Link>
+
+          <Link to="/employees" className="p-2 rounded hover:bg-zinc-800">
+            👥 Funcionários
+          </Link>
+
+          <Link to="/reports" className="p-2 rounded hover:bg-zinc-800">
+            📈 Relatórios
+          </Link>
+
+        </nav>
+
+        <div className="mt-6 flex flex-col gap-2">
+
+          <button
+            onClick={toggleTheme}
+            className="bg-zinc-800 p-2 rounded"
+          >
+            🌙 Tema
           </button>
-          <button onClick={handleLogout} className="w-full bg-red-600 hover:bg-red-700 text-white font-medium p-2 rounded-lg transition-colors">
+
+          <button
+            onClick={logout}
+            className="bg-red-600 p-2 rounded"
+          >
             Sair
           </button>
+
         </div>
       </aside>
-
-      {isOpen && <div onClick={() => setIsOpen(false)} className="fixed inset-0 z-30 bg-black opacity-50 md:hidden"></div>}
     </>
   );
 }

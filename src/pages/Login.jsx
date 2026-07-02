@@ -3,42 +3,54 @@ import { supabase } from "../services/supabase";
 import { useNavigate } from "react-router-dom";
 
 export default function Login() {
+  const navigate = useNavigate();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const navigate = useNavigate();
 
   async function handleLogin(e) {
     e.preventDefault();
-    
-    // Pegando a resposta completa do Supabase (data)
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    
-    if (!error && data?.session?.user) {
-      const user = data.session.user;
-      
-      // Salva o ID do usuário ou o metadata da empresa que você configurou no Supabase
-      const companyId = user.user_metadata?.company_id || user.id;
-      const companyName = user.user_metadata?.company_name || "Minha Empresa";
 
-      localStorage.setItem('company_id', companyId);
-      localStorage.setItem('company_name', companyName);
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
 
-      navigate("/");
-    } else {
-      alert("Erro: " + error.message);
+    if (error) {
+      alert(error.message);
+      return;
     }
+
+    navigate("/");
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-zinc-950 transition-colors px-4">
-      <div className="w-full max-w-md bg-white dark:bg-zinc-900 p-8 rounded-2xl border border-slate-100 dark:border-zinc-800 shadow-xl">
-        <h1 className="text-3xl font-black text-center text-slate-900 dark:text-white mb-6">Vendas Pro 🚀</h1>
-        <form onSubmit={handleLogin} className="space-y-4">
-          <input type="email" placeholder="E-mail" onChange={e => setEmail(e.target.value)} className="w-full p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white" required />
-          <input type="password" placeholder="Senha" onChange={e => setPassword(e.target.value)} className="w-full p-3 rounded-xl bg-slate-50 dark:bg-zinc-800 border border-slate-200 dark:border-zinc-700 text-slate-900 dark:text-white" required />
-          <button type="submit" className="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold p-3 rounded-xl transition-colors">Entrar</button>
-        </form>
-      </div>
+    <div className="flex items-center justify-center h-screen bg-slate-950 text-white">
+      <form onSubmit={handleLogin} className="p-6 bg-zinc-900 rounded-lg w-80 space-y-4">
+        <h1 className="text-xl font-bold">Login</h1>
+
+        <input
+          className="w-full p-2 rounded bg-zinc-800"
+          placeholder="Email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+        />
+
+        <input
+          className="w-full p-2 rounded bg-zinc-800"
+          type="password"
+          placeholder="Senha"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+
+        <button
+          className="w-full bg-indigo-600 p-2 rounded"
+          type="submit"
+        >
+          Entrar
+        </button>
+      </form>
     </div>
   );
 }
