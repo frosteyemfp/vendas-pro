@@ -4,28 +4,30 @@ import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 
 export default function Categories() {
-  const { companyId } = useAuth();
+  const { companyId: contextCompanyId } = useAuth();
   const [categories, setCategories] = useState([]);
 
+  // Se sumir do context no F5, resgata o ID do localStorage
+  const currentCompanyId = contextCompanyId || localStorage.getItem('company_id');
+
   async function fetchCategories() {
-    if (!companyId) return;
-    const { data } = await supabase.from("categories").select("*").eq("company_id", companyId);
+    if (!currentCompanyId) return;
+    const { data } = await supabase.from("categories").select("*").eq("company_id", currentCompanyId);
     if (data) setCategories(data);
   }
 
   async function handleCreate(e) {
     e.preventDefault();
     
-    // Captura o texto direto do input do HTML para evitar travamento de estado assíncrono
     const inputName = e.target.elements.categoryName.value.trim();
     
     if (!inputName) return alert("Por favor, digite o nome da categoria!");
-    if (!companyId) return alert("Erro de sessão: ID da empresa não encontrado. Recarregue a página.");
+    if (!currentCompanyId) return alert("Erro de sessão: ID da empresa não encontrado. Recarregue a página.");
 
-    const { error } = await supabase.from("categories").insert([{ name: inputName, company_id: companyId }]);
+    const { error } = await supabase.from("categories").insert([{ name: inputName, company_id: currentCompanyId }]);
     
     if (!error) { 
-      e.target.reset(); // Limpa o formulário na hora
+      e.target.reset(); 
       fetchCategories(); 
     } else {
       alert("Erro ao adicionar no Supabase: " + error.message);
@@ -44,14 +46,16 @@ export default function Categories() {
     } catch (err) { alert(err.message); }
   }
 
-  useEffect(() => { fetchCategories(); }, [companyId]);
+  useEffect(() => { 
+    fetchCategories(); 
+  }, [currentCompanyId]);
 
   return (
     <div className="flex h-screen bg-white dark:bg-zinc-950 text-slate-900 dark:text-white transition-colors duration-200">
       <Sidebar />
       <main className="flex-1 p-6 md:p-10 overflow-y-auto pt-16 md:pt-10">
         <h1 className="text-2xl md:text-3xl font-extrabold mb-2">🏷️ Categorias</h1>
-        <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6">Organize seus produtos por setor comercial</p>
+        <p className="text-sm text-slate-500 dark:text-zinc-400 mb-6">Organize seus produtos por sector comercial</p>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <form onSubmit={handleCreate} className="bg-slate-50 dark:bg-zinc-900 p-6 rounded-xl border border-slate-200 dark:border-zinc-800 shadow-sm h-fit">

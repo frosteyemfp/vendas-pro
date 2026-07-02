@@ -9,9 +9,24 @@ export default function Login() {
 
   async function handleLogin(e) {
     e.preventDefault();
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
-    if (!error) navigate("/");
-    else alert("Erro: " + error.message);
+    
+    // Pegando a resposta completa do Supabase (data)
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    
+    if (!error && data?.session?.user) {
+      const user = data.session.user;
+      
+      // Salva o ID do usuário ou o metadata da empresa que você configurou no Supabase
+      const companyId = user.user_metadata?.company_id || user.id;
+      const companyName = user.user_metadata?.company_name || "Minha Empresa";
+
+      localStorage.setItem('company_id', companyId);
+      localStorage.setItem('company_name', companyName);
+
+      navigate("/");
+    } else {
+      alert("Erro: " + error.message);
+    }
   }
 
   return (
