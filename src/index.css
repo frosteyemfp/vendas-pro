@@ -1,34 +1,70 @@
 @import "tailwindcss";
 
-/* Base global do sistema SaaS */
-html, body {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-  font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
-  background-color: #0a0a0a;
+@theme {
+  /* Cores premium inspiradas na Stripe e Linear */
+  --color-brand-slate-50: #FAFAFA;
+  --color-brand-slate-100: #F4F4F5;
+  --color-brand-slate-200: #E4E4E7;
+  --color-brand-slate-300: #D4D4D8;
+  --color-brand-slate-400: #A1A1AA;
+  --color-brand-slate-500: #71717A;
+  --color-brand-slate-600: #52525B;
+  --color-brand-slate-700: #3F3F46;
+  --color-brand-slate-800: #27272A;
+  --color-brand-slate-900: #18181B;
+  --color-brand-slate-950: #09090B;
+
+  --color-brand-accent-indigo: #6366F1;
+  --color-brand-accent-emerald: #10B981;
+  --color-brand-accent-rose: #EF4444;
+  --color-brand-accent-amber: #F59E0B;
+
+  /* Sombras e bordas customizadas */
+  --shadow-premium: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
+  --shadow-premium-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
+  --shadow-premium-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
+
+  --radius-premium-xl: 14px;
+  --radius-premium-2xl: 18px;
 }
 
-/* Smooth transitions global */
-* {
-  transition: background-color 0.2s ease, color 0.2s ease;
+/* Configurações de layout padrão */
+body {
+  background-color: var(--color-brand-slate-50);
+  color: var(--color-brand-slate-800);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Scroll mais limpo */
+/* Forçar o fundo e textos corretos para garantir leitura enquanto ajustamos */
+body {
+  background-color: #f8fafc !important; /* Um cinza bem claro e confortável */
+  color: #0f172a !important; /* Letras escuras fáceis de ler */
+}
+
+/* Corrigir os cartões que ficaram escuros de forma errada */
+.bg-white, [class*="bg-white"], [class*="bg-brand-slate-900"] {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+.dark body {
+  background-color: var(--color-brand-slate-950);
+  color: var(--color-brand-slate-100);
+}
+
+/* Custom Scrollbar minimalista padrão Linear */
 ::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
+  height: 6px;
 }
-
-::-webkit-scrollbar-thumb {
-  background: #333;
-  border-radius: 8px;
-}
-
 ::-webkit-scrollbar-track {
   background: transparent;
 }
-
-/* Dark mode base (usando classe dark do seu AuthContext) */
-.dark body {
-  background-color: #09090b;
+::-webkit-scrollbar-thumb {
+  background-color: var(--color-brand-slate-200);
+  border-radius: 9999px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background-color: var(--color-brand-slate-800);
 }

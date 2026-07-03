@@ -1,104 +1,30 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
-import Login from "../pages/Login";
-import Dashboard from "../pages/Dashboard";
+// CORREÇÃO: Usando "../" para sair de "routes" e entrar em "pages"
 import Products from "../pages/Products";
-import Categories from "../pages/Categories";
 import Sales from "../pages/Sales";
+import Dashboard from "../pages/Dashboard";
 import Settings from "../pages/Settings";
-import Employees from "../pages/Employees";
-import Reports from "../pages/Reports";
-
-import { useAuth } from "../context/AuthContext";
-
-function PrivateRoute({ children }) {
-  const { user, loading } = useAuth();
-
-  if (loading) {
-    return (
-      <div className="p-6 text-center text-slate-500">
-        Carregando...
-      </div>
-    );
-  }
-
-  if (!user) {
-    return <Navigate to="/login" />;
-  }
-
-  return children;
-}
 
 export default function AppRoutes() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/login" element={<Login />} />
+        {/* Rota raiz redireciona para produtos */}
+        <Route path="/" element={<Navigate to="/products" replace />} />
 
-        <Route
-          path="/"
-          element={
-            <PrivateRoute>
-              <Dashboard />
-            </PrivateRoute>
-          }
-        />
+        {/* Rotas principais do sistema */}
+        <Route path="/products" element={<Products />} />
+        <Route path="/sales" element={<Sales />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/settings" element={<Settings />} />
 
-        <Route
-          path="/products"
-          element={
-            <PrivateRoute>
-              <Products />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/categories"
-          element={
-            <PrivateRoute>
-              <Categories />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/sales"
-          element={
-            <PrivateRoute>
-              <Sales />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/employees"
-          element={
-            <PrivateRoute>
-              <Employees />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/reports"
-          element={
-            <PrivateRoute>
-              <Reports />
-            </PrivateRoute>
-          }
-        />
-
-        <Route
-          path="/settings"
-          element={
-            <PrivateRoute>
-              <Settings />
-            </PrivateRoute>
-          }
-        />
-
-        <Route path="*" element={<Navigate to="/" />} />
+        {/* Fallback 404 */}
+        <Route path="*" element={
+          <div className="flex h-screen w-screen items-center justify-center bg-white text-xs font-semibold text-gray-400">
+            Página não encontrada.
+          </div>
+        } />
       </Routes>
     </BrowserRouter>
   );
