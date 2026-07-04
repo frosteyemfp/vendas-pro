@@ -30,12 +30,15 @@ export default function Login() {
         if (err) throw err;
         setMessage("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
       } else if (isRegister) {
-        // Cadastro de Nova Conta
+        // Cadastro de Nova Conta com correção nos metadados da trigger
         const { error: err } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            data: { name: username } // Passa o nome para o trigger do banco
+            data: { 
+              name: username,
+              username: username 
+            }
           }
         });
         if (err) throw err;
@@ -139,7 +142,7 @@ export default function Login() {
             </div>
           )}
 
-          {/* AVISO EM VERMELHO MINIMALISTA PEDIDO */}
+          {/* Erros */}
           {error && (
             <p className="text-[11px] font-medium text-red-500 pl-1 animate-pulse">
               {error}
@@ -162,7 +165,7 @@ export default function Login() {
           <div className="flex-grow border-t border-gray-100"></div>
         </div>
 
-        {/* Login com Google (Substituído por um G estilizado via SVG nativo limpo para evitar problemas de dependência) */}
+        {/* Login com Google */}
         <button 
           onClick={handleGoogleLogin}
           className="w-full py-2.5 bg-white hover:bg-gray-50 border border-gray-200 text-gray-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-2xs"
@@ -185,6 +188,9 @@ export default function Login() {
               setIsForgotPassword(false);
               setError("");
               setMessage("");
+              setEmail("");
+              setPassword("");
+              setUsername("");
             }} 
             className="text-xs font-bold text-gray-400 hover:text-black transition-colors"
           >
