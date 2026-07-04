@@ -63,13 +63,9 @@ export function AuthProvider({ children }) {
   const value = {
     user,
     profile,
-
     companyId: profile?.company_id ?? null,
-
     role: profile?.role ?? "user",
-
     isAdmin: profile?.role === "admin",
-
     loading,
   };
 

@@ -74,14 +74,24 @@ export default function Products() {
       const file = e.target.files[0];
       if (!file) return;
 
+      // Validação básica de tipo de arquivo
+      if (!file.type.startsWith("image/")) {
+        setError("Por favor, selecione um arquivo de imagem válido.");
+        return;
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${companyId}/${Math.random()}.${fileExt}`;
-      const filePath = `${fileName}`;
+      // Usando o timestamp atual para garantir nomes únicos e limpos
+      const fileName = `${Date.now()}.${fileExt}`;
+      const filePath = `${companyId}/${fileName}`;
 
       // Envia o arquivo para o bucket chamado 'products'
-      const { error: uploadError } = await supabase.storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
         .from("products")
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: true // Permite sobrescrever se houver conflito raro
+        });
 
       if (uploadError) throw uploadError;
 
@@ -92,8 +102,9 @@ export default function Products() {
 
       setImageUrl(publicUrl);
     } catch (err) {
-      console.error("Erro no upload da imagem:", err);
-      setError("Não foi possível enviar a imagem selecionada.");
+      // Exibe o erro real do Supabase no console para te ajudar a debugar
+      console.error("Erro detalhado no upload da imagem:", err);
+      setError(err.message || "Não foi possível enviar a imagem selecionada.");
     } finally {
       setUploading(false);
     }
