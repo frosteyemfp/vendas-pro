@@ -23,7 +23,7 @@ export default function Settings() {
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  // Estados originais dos campos de configurações da Empresa
+  // Estado do campo de configurações da Empresa (Mantido apenas o Nome para evitar erros de colunas)
   const [companyName, setCompanyName] = useState("");
   const [appTheme, setAppTheme] = useState("light");
   const [notifyStock, setNotifyStock] = useState(true);
@@ -55,8 +55,6 @@ export default function Settings() {
 
       if (data) {
         setCompanyName(data.name || "");
-        setAppTheme(data.theme || "light");
-        setNotifyStock(data.notify_low_stock ?? true);
       }
     } catch (err) {
       console.error("Erro ao carregar configurações:", err);
@@ -128,20 +126,20 @@ export default function Settings() {
     try {
       setSubmitting(true);
 
-      // 1. Atualiza dados do Perfil de Usuário (Apenas se a tabela contiver essa coluna)
+      // 1. Atualiza dados do Perfil de Usuário (Apenas o nome)
       if (user?.id) {
-        await supabase
+        const { error: profileError } = await supabase
           .from("profiles")
           .update({ name: username.trim() })
           .eq("id", user.id);
+
+        if (profileError) throw profileError;
       }
 
-      // 2. Atualiza dados da Empresa (Removido a coluna 'document' que causava o erro)
+      // 2. Atualiza dados da Empresa (Envia APENAS o nome que existe no banco)
       if (companyId) {
         const payload = {
-          name: companyName.trim(),
-          theme: appTheme,
-          notify_low_stock: notifyStock,
+          name: companyName.trim()
         };
 
         const { error: companyError } = await supabase
