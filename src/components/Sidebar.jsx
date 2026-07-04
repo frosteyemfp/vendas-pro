@@ -1,4 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
+import { supabase } from "../services/supabase";
+import { useAuth } from "../context/AuthContext";
 import { 
   Package, 
   ShoppingCart, 
@@ -11,6 +13,7 @@ import {
 
 export default function Sidebar() {
   const location = useLocation();
+  const { profile } = useAuth();
 
   // Definição das rotas principais do sistema
   const menuItems = [
@@ -39,6 +42,16 @@ export default function Sidebar() {
       description: "Ajustes do sistema"
     },
   ];
+
+  // Função para deslogar do sistema
+  async function handleLogout() {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error("Erro ao deslogar:", error.message);
+    } else {
+      window.location.href = "/"; 
+    }
+  }
 
   return (
     <aside className="fixed inset-y-0 left-0 w-64 bg-white border-r border-gray-100 hidden md:flex flex-col p-6 z-40 select-none">
@@ -105,24 +118,28 @@ export default function Sidebar() {
         })}
       </nav>
 
-      {/* Footer do Menu com Informações de Perfil Resumidas */}
+      {/* Footer do Menu com Informações de Perfil Dinâmicas */}
       <div className="pt-4 border-t border-gray-100 flex flex-col gap-2">
         <div className="flex items-center gap-3 px-2 py-1.5">
           <div className="h-8 w-8 rounded-full bg-gray-100 border border-gray-200 flex items-center justify-center shrink-0 overflow-hidden">
-            <User className="h-4 w-4 text-gray-500" />
+            {profile?.avatar_url ? (
+              <img src={profile.avatar_url} alt="Perfil" className="w-full h-full object-cover" />
+            ) : (
+              <User className="h-4 w-4 text-gray-500" />
+            )}
           </div>
           <div className="flex flex-col min-w-0 flex-1">
             <span className="text-xs font-bold text-gray-900 truncate">
-              Operador
+              {profile?.name || "Operador"}
             </span>
             <span className="text-[10px] text-gray-400 truncate">
-              ID da Empresa
+              Conta ativa
             </span>
           </div>
         </div>
         
         <button 
-          onClick={() => console.log("Logout disparado")}
+          onClick={handleLogout}
           className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-50/50 transition-colors w-full text-left group"
         >
           <LogOut className="h-4 w-4 shrink-0 transition-transform group-hover:translate-x-0.5" />
