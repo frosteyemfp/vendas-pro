@@ -1,7 +1,10 @@
-function App() {
+import { AuthProvider } from "./context/AuthContext";
+import AppRoutes from "./routes/AppRoutes";
+
+export default function App() {
   return (
-    <h1>Vendas Pro 🚀</h1>
+    <AuthProvider>
+      <AppRoutes />
+    </AuthProvider>
   );
 }
-
-export default App;

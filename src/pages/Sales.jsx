@@ -3,8 +3,8 @@ import { supabase } from "../services/supabase";
 import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { 
-  Plus, Trash2, Loader2, AlertCircle, Save, X, 
-  ChevronDown, ChevronUp, ShoppingBag, CreditCard, Info, Calendar
+  Plus, Trash2, Loader2, AlertCircle, X, 
+  ChevronDown, ChevronUp, CreditCard, Calendar
 } from "lucide-react";
 
 export default function Sales() {
@@ -154,7 +154,6 @@ export default function Sales() {
 
       if (saleErr) throw saleErr;
 
-      // REMOVIDO: 'product_name' do payload para obedecer a estrutura do seu banco
       const itemsPayload = cart.map(item => ({
         sale_id: newSale.id,
         product_id: item.product_id,
@@ -175,16 +174,35 @@ export default function Sales() {
     }
   }
 
+  // FUNÇÃO ATUALIZADA: Agora deleta os itens da tabela correta primeiro para acionar o Trigger
   async function handleDeleteSale(id) {
-    if (!confirm("Excluir esta venda reverterá os dados. Deseja prosseguir?")) return;
+    if (!confirm("Excluir esta venda reverterá os dados e estornará os itens ao estoque. Deseja prosseguir?")) return;
     try {
-      await supabase.from("sale_items").delete().eq("sale_id", id);
-      const { error } = await supabase.from("sales").delete().eq("id", id);
-      if (error) throw error;
+      setLoading(true);
+      setError(null);
+
+      // 1. Deleta primeiro da sale_items para ativar o trigger que devolve os produtos ao estoque
+      const { error: itemsErr } = await supabase
+        .from("sale_items")
+        .delete()
+        .eq("sale_id", id);
+        
+      if (itemsErr) throw itemsErr;
+
+      // 2. Com os itens limpos e estoque estornado, remove o registro pai da tabela sales
+      const { error: saleErr } = await supabase
+        .from("sales")
+        .delete()
+        .eq("id", id);
+        
+      if (saleErr) throw saleErr;
+
       loadData();
     } catch (err) {
       console.error(err);
-      setError("Não foi possível excluir a venda selecionada.");
+      setError(`Não foi possível estornar a venda: ${err.message || "Erro de conexão."}`);
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -258,7 +276,6 @@ export default function Sales() {
                         <div className="space-y-2">
                           {sale.sale_items?.map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-gray-100 font-semibold">
-                              {/* Busca dinamicamente o nome vindo do relacionamento products */}
                               <span className="text-gray-900">{item.products?.name || "Produto Removido"}</span>
                               <span className="text-gray-500">{item.quantity}x <span className="text-gray-900 ml-2 font-bold">R$ {((item.price || 0) * item.quantity).toFixed(2)}</span></span>
                             </div>

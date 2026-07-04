@@ -81,7 +81,6 @@ export default function Products() {
       }
 
       const fileExt = file.name.split('.').pop();
-      // Usando o timestamp atual para garantir nomes únicos e limpos
       const fileName = `${Date.now()}.${fileExt}`;
       const filePath = `${companyId}/${fileName}`;
 
@@ -90,7 +89,7 @@ export default function Products() {
         .from("products")
         .upload(filePath, file, {
           cacheControl: '3600',
-          upsert: true // Permite sobrescrever se houver conflito raro
+          upsert: true 
         });
 
       if (uploadError) throw uploadError;
@@ -102,7 +101,6 @@ export default function Products() {
 
       setImageUrl(publicUrl);
     } catch (err) {
-      // Exibe o erro real do Supabase no console para te ajudar a debugar
       console.error("Erro detalhado no upload da imagem:", err);
       setError(err.message || "Não foi possível enviar a imagem selecionada.");
     } finally {
@@ -213,41 +211,54 @@ export default function Products() {
                   </tr>
                 </thead>
                 <tbody className="text-xs font-semibold text-gray-700 divide-y divide-gray-50">
-                  {products.map((product) => (
-                    <tr key={product.id} className="hover:bg-gray-50/30 transition-colors">
-                      <td className="p-4">
-                        {product.image_url ? (
-                          <img src={product.image_url} alt={product.name} className="w-9 h-9 object-cover rounded-xl border border-gray-100 shadow-2xs" />
-                        ) : (
-                          <div className="w-9 h-9 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-400"><ImageIcon className="w-4 h-4" /></div>
-                        )}
-                      </td>
-                      <td className="p-4 text-gray-900 font-bold">{product.name}</td>
-                      <td className="p-4 text-gray-500">R$ {(product.cost_price || 0).toFixed(2)}</td>
-                      <td className="p-4 text-gray-900">R$ {(product.price || 0).toFixed(2)}</td>
-                      <td className="p-4 text-center">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          product.stock <= 5 ? "bg-red-50 text-red-600" : "bg-gray-50 text-gray-600"
-                        }`}>
-                          {product.stock} un
-                        </span>
-                      </td>
-                      <td className="p-4 text-right flex items-center justify-end gap-2">
-                        <button 
-                          onClick={() => handleOpenEdit(product)}
-                          className="p-1.5 hover:bg-gray-100 text-gray-600 rounded-lg transition-all"
-                        >
-                          <Edit2 className="h-3.5 w-3.5" />
-                        </button>
-                        <button 
-                          onClick={() => handleDeleteProduct(product.id)}
-                          className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-all"
-                        >
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
+                  {products.map((product) => {
+                    const isOutOfStock = product.stock <= 0;
+
+                    return (
+                      <tr 
+                        key={product.id} 
+                        className={`hover:bg-gray-50/30 transition-all duration-200 ${
+                          isOutOfStock ? "opacity-40 grayscale-[25%]" : ""
+                        }`}
+                      >
+                        <td className="p-4">
+                          {product.image_url ? (
+                            <img src={product.image_url} alt={product.name} className="w-9 h-9 object-cover rounded-xl border border-gray-100 shadow-2xs" />
+                          ) : (
+                            <div className="w-9 h-9 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-400"><ImageIcon className="w-4 h-4" /></div>
+                          )}
+                        </td>
+                        <td className="p-4 text-gray-900 font-bold">{product.name}</td>
+                        <td className="p-4 text-gray-500">R$ {(product.cost_price || 0).toFixed(2)}</td>
+                        <td className="p-4 text-gray-900">R$ {(product.price || 0).toFixed(2)}</td>
+                        <td className="p-4 text-center">
+                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-tight ${
+                            isOutOfStock 
+                              ? "bg-red-100 text-red-700 font-extrabold uppercase" 
+                              : product.stock <= 5 
+                                ? "bg-amber-50 text-amber-700" 
+                                : "bg-gray-50 text-gray-600"
+                          }`}>
+                            {isOutOfStock ? "Esgotado" : `${product.stock} un`}
+                          </span>
+                        </td>
+                        <td className="p-4 text-right flex items-center justify-end gap-2">
+                          <button 
+                            onClick={() => handleOpenEdit(product)}
+                            className="p-1.5 hover:bg-gray-100 text-gray-600 rounded-lg transition-all"
+                          >
+                            <Edit2 className="h-3.5 w-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteProduct(product.id)}
+                            className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-all"
+                          >
+                            <Trash2 className="h-3.5 w-3.5" />
+                          </button>
+                        </td>
+                      </tr>
+                    );
+                  })}
                 </tbody>
               </table>
             </div>

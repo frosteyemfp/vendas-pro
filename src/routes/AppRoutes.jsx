@@ -1,30 +1,94 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
 
-// CORREÇÃO: Usando "../" para sair de "routes" e entrar em "pages"
+// IMPORTAÇÕES REAIS DAS SUAS PÁGINAS
+import Login from "../pages/Login";
 import Products from "../pages/Products";
-import Sales from "../pages/Sales";
-import Dashboard from "../pages/Dashboard";
 import Settings from "../pages/Settings";
+import Sales from "../pages/Sales";         // Puxando a sua tela real de Vendas
+import Dashboard from "../pages/Dashboard"; // Puxando a sua tela real de Rendimentos
+
+// Componente para proteger rotas privadas
+function PrivateRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center text-xs font-semibold text-gray-400">
+        Carregando sistema...
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/" replace />;
+  }
+
+  return children;
+}
 
 export default function AppRoutes() {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#fafafa] flex items-center justify-center text-xs font-semibold text-gray-400">
+        Iniciando sessão...
+      </div>
+    );
+  }
+
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota raiz redireciona para produtos */}
-        <Route path="/" element={<Navigate to="/products" replace />} />
+        {/* Rota Raiz */}
+        <Route 
+          path="/" 
+          element={user ? <Navigate to="/products" replace /> : <Login />} 
+        />
 
-        {/* Rotas principais do sistema */}
-        <Route path="/products" element={<Products />} />
-        <Route path="/sales" element={<Sales />} />
-        <Route path="/dashboard" element={<Dashboard />} />
-        <Route path="/settings" element={<Settings />} />
+        {/* Rota de Produtos */}
+        <Route 
+          path="/products" 
+          element={
+            <PrivateRoute>
+              <Products />
+            </PrivateRoute>
+          } 
+        />
 
-        {/* Fallback 404 */}
-        <Route path="*" element={
-          <div className="flex h-screen w-screen items-center justify-center bg-white text-xs font-semibold text-gray-400">
-            Página não encontrada.
-          </div>
-        } />
+        {/* Rota de Vendas Real */}
+        <Route 
+          path="/sales" 
+          element={
+            <PrivateRoute>
+              <Sales /> 
+            </PrivateRoute>
+          } 
+        />
+
+        {/* Rota de Rendimentos Real */}
+        <Route 
+          path="/dashboard" 
+          element={
+            <PrivateRoute>
+              <Dashboard />
+            </PrivateRoute>
+          } 
+        />
+        
+        {/* Rota de Configurações */}
+        <Route 
+          path="/settings" 
+          element={
+            <PrivateRoute>
+              <Settings />
+            </PrivateRoute>
+          } 
+        />
+
+        {/* Rota de segurança para caminhos inexistentes */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </BrowserRouter>
   );
