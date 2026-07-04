@@ -25,11 +25,10 @@ export default function Settings() {
 
   // Estados originais dos campos de configurações da Empresa
   const [companyName, setCompanyName] = useState("");
-  const [document, setDocument] = useState("");
   const [appTheme, setAppTheme] = useState("light");
   const [notifyStock, setNotifyStock] = useState(true);
 
-  // NOVOS ESTADOS: Perfil do Usuário
+  // Perfil do Usuário
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
 
@@ -56,7 +55,6 @@ export default function Settings() {
 
       if (data) {
         setCompanyName(data.name || "");
-        setDocument(data.document || "");
         setAppTheme(data.theme || "light");
         setNotifyStock(data.notify_low_stock ?? true);
       }
@@ -77,7 +75,7 @@ export default function Settings() {
     setTimeout(() => setToast({ show: false, message: "", type: "success" }), 4000);
   }
 
-  // NOVA FUNÇÃO: Upload de Imagem do Avatar
+  // Upload de Imagem do Avatar
   async function handleUploadAvatar(e) {
     try {
       setUploading(true);
@@ -85,28 +83,29 @@ export default function Settings() {
       if (!file) return;
 
       const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+      const filePath = `${user.id}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
-        .from("products") 
+        .from("avatars") 
         .upload(filePath, file, { cacheControl: '3600', upsert: true });
 
       if (uploadError) throw uploadError;
 
       const { data: { publicUrl } } = supabase.storage
-        .from("products")
+        .from("avatars")
         .getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
       showToast("Foto carregada! Clique em Salvar para fixar as mudanças.");
     } catch (err) {
-      showToast("Não foi possível carregar a imagem de perfil.", "error");
+      console.error(err);
+      showToast("Não foi possível carregar a imagem de perfil. Verifique as permissões do Bucket.", "error");
     } finally {
       setUploading(false);
     }
   }
 
-  // NOVA FUNÇÃO: Enviar link de redefinição de senha
+  // Enviar link de redefinição de senha
   async function handleResetPassword() {
     try {
       setSubmitting(true);
@@ -122,26 +121,25 @@ export default function Settings() {
     }
   }
 
-  // Salva tudo de volta no Supabase
+  // Salva alterações de Perfil e Empresa no Supabase
   async function handleSaveSettings(e) {
     e.preventDefault();
 
     try {
       setSubmitting(true);
 
-      // 1. Atualiza dados do Perfil de Usuário
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ name: username.trim(), avatar_url: avatarUrl })
-        .eq("id", user.id);
+      // 1. Atualiza dados do Perfil de Usuário (Apenas se a tabela contiver essa coluna)
+      if (user?.id) {
+        await supabase
+          .from("profiles")
+          .update({ name: username.trim() })
+          .eq("id", user.id);
+      }
 
-      if (profileError) throw profileError;
-
-      // 2. Atualiza dados da Empresa se o ID existir
+      // 2. Atualiza dados da Empresa (Removido a coluna 'document' que causava o erro)
       if (companyId) {
         const payload = {
           name: companyName.trim(),
-          document: document.trim(),
           theme: appTheme,
           notify_low_stock: notifyStock,
         };
@@ -198,7 +196,7 @@ export default function Settings() {
           ) : (
             <form onSubmit={handleSaveSettings} className="space-y-6 animate-in fade-in duration-300">
               
-              {/* NOVO BLOCO: Perfil da Conta do Usuário */}
+              {/* Bloco: Perfil da Conta do Usuário */}
               <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-2xs space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
                   <User className="h-4 w-4 text-gray-400" />
@@ -240,7 +238,7 @@ export default function Settings() {
                   </div>
                 </div>
 
-                {/* NOVO SUB-BLOCO: Segurança / Senha por E-mail */}
+                {/* Segurança / Senha por E-mail */}
                 <div className="pt-4 border-t border-gray-50 space-y-2">
                   <div className="flex flex-col">
                     <span className="text-xs font-semibold text-gray-700">Segurança da Conta</span>
@@ -258,14 +256,14 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Bloco 1 Original: Perfil do Estabelecimento */}
+              {/* Bloco: Perfil do Estabelecimento */}
               <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-2xs space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
                   <Building2 className="h-4 w-4 text-gray-400" />
                   <h2 className="text-xs font-bold text-gray-800 uppercase tracking-wider">Dados do Estabelecimento</h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 gap-4">
                   <div className="space-y-1.5">
                     <label className="text-xs font-semibold text-gray-700">Nome Comercial da Empresa</label>
                     <input
@@ -277,22 +275,10 @@ export default function Settings() {
                       className="w-full p-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-black transition-all"
                     />
                   </div>
-
-                  <div className="space-y-1.5">
-                    <label className="text-xs font-semibold text-gray-700">Documento / Identificador</label>
-                    <input
-                      type="text"
-                      disabled={submitting}
-                      value={document}
-                      onChange={(e) => setDocument(e.target.value)}
-                      placeholder="CNPJ ou ID Fiscal"
-                      className="w-full p-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-black transition-all"
-                    />
-                  </div>
                 </div>
               </div>
 
-              {/* Bloco 2 Original: Preferências Técnicas e de Interface */}
+              {/* Bloco: Preferências Técnicas e de Interface */}
               <div className="bg-white border border-gray-100 rounded-3xl p-6 shadow-2xs space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b border-gray-50">
                   <Sliders className="h-4 w-4 text-gray-400" />
@@ -337,7 +323,7 @@ export default function Settings() {
                 </div>
               </div>
 
-              {/* Botão de Envio Inferior Original */}
+              {/* Botão de Envio Inferior */}
               <div className="flex items-center justify-end gap-3 pt-2">
                 <div className="flex items-center gap-1.5 text-[10px] text-gray-400 font-medium mr-auto">
                   <ShieldCheck className="h-3.5 w-3.5 text-zinc-400" />
