@@ -91,7 +91,7 @@ export default function Settings() {
     setTimeout(() => setToast({ show: false, message: "", type: "success" }), 4000);
   }
 
-  // CORREÇÃO: Enviando diretamente para a raiz do bucket para evitar conflito com pastas restritas por RLS
+  // Enviando diretamente para a raiz do bucket para evitar conflito com pastas restritas por RLS
   async function handleUploadAvatar(e) {
     try {
       setUploading(true);
@@ -99,7 +99,6 @@ export default function Settings() {
       if (!file) return;
 
       const fileExt = file.name.split('.').pop();
-      // Salvando diretamente na raiz do bucket 'products' para obedecer à RLS de objetos livres
       const filePath = `avatar-${user.id}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
@@ -154,7 +153,7 @@ export default function Settings() {
 
       if (error) throw error;
 
-      showToast("Senha updated com sucesso!");
+      showToast("Senha atualizada com sucesso!");
       setNewPassword("");
       setShowPasswordResetForm(false);
     } catch (err) {
@@ -164,7 +163,7 @@ export default function Settings() {
     }
   }
 
-  // CORREÇÃO MÁXIMA: Cria uma empresa caso o usuário não possua nenhuma vinculada ao perfil (company_id = null)
+  // Salva as alterações de Perfil e Empresa (Cria uma se company_id for null)
   async function handleSaveSettings(e) {
     e.preventDefault();
     setSubmitting(true);
@@ -333,7 +332,7 @@ export default function Settings() {
                   {/* Segurança / Senha por E-mail */}
                   <div className="pt-4 border-t border-gray-50 space-y-2">
                     <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-gray-700">Segurança da Conta</span>
+                      <span className="text-xs font-semibold text-gray-700">Security da Conta</span>
                       <span className="text-[10px] text-gray-400">Clique para enviar um link de alteração de senha segura diretamente para o seu e-mail.</span>
                     </div>
                     <button

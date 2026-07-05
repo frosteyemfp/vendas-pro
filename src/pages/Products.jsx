@@ -24,7 +24,10 @@ export default function Products() {
   async function loadProducts() {
     try {
       setLoading(true);
-      if (!companyId) return;
+      if (!companyId) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error: err } = await supabase
         .from("products")
@@ -47,6 +50,11 @@ export default function Products() {
   }, [companyId]);
 
   function handleOpenAdd() {
+    if (!companyId) {
+      setError("Você precisa configurar e salvar os dados do seu Estabelecimento na tela de Configurações antes de adicionar produtos.");
+      return;
+    }
+    setError(null);
     setEditingId(null);
     setName("");
     setCostPrice("");
@@ -57,6 +65,7 @@ export default function Products() {
   }
 
   function handleOpenEdit(product) {
+    setError(null);
     setEditingId(product.id);
     setName(product.name);
     setCostPrice(product.cost_price || "");
@@ -66,7 +75,6 @@ export default function Products() {
     setIsModalOpen(true);
   }
 
-  // Função para fazer o upload da imagem no Storage do Supabase
   async function handleUploadImage(e) {
     try {
       setError(null);
@@ -74,7 +82,6 @@ export default function Products() {
       const file = e.target.files[0];
       if (!file) return;
 
-      // Validação básica de tipo de arquivo
       if (!file.type.startsWith("image/")) {
         setError("Por favor, selecione um arquivo de imagem válido.");
         return;
@@ -82,10 +89,9 @@ export default function Products() {
 
       const fileExt = file.name.split('.').pop();
       const fileName = `${Date.now()}.${fileExt}`;
-      const filePath = `${companyId}/${fileName}`;
+      const filePath = `${companyId || "anonymous"}/${fileName}`;
 
-      // Envia o arquivo para o bucket chamado 'products'
-      const { data: uploadData, error: uploadError } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from("products")
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -94,7 +100,6 @@ export default function Products() {
 
       if (uploadError) throw uploadError;
 
-      // Pega a URL pública gerada
       const { data: { publicUrl } } = supabase.storage
         .from("products")
         .getPublicUrl(filePath);
@@ -111,6 +116,10 @@ export default function Products() {
   async function handleSaveProduct(e) {
     e.preventDefault();
     if (!name.trim() || !salePrice || !stock) return;
+    if (!companyId) {
+      setError("Erro: ID do estabelecimento não encontrado. Configure sua loja primeiro.");
+      return;
+    }
 
     try {
       setSubmitting(true);
@@ -165,23 +174,34 @@ export default function Products() {
     <div className="flex min-h-screen bg-[#fafafa] text-black font-sans antialiased select-none">
       <Sidebar />
 
-      <main className="flex-1 p-6 md:p-10 ml-0 md:ml-64 transition-all duration-300">
+      {/* pt-20 corrige o espaçamento mobile para não sumir atrás da barra superior */}
+      <main className="flex-1 p-6 md:p-10 ml-0 md:ml-64 pt-20 md:pt-10 transition-all duration-300">
         <div className="max-w-4xl mx-auto space-y-6">
           
           {/* Header */}
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
               <h1 className="text-2xl font-bold text-gray-900">Cadastro de Produtos</h1>
               <p className="text-xs text-gray-400 font-medium">Controle seu catálogo de mercadorias, custos e estoque ativo</p>
             </div>
             <button 
               onClick={handleOpenAdd}
-              className="px-4 py-2.5 bg-black hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-2 shadow-sm"
+              className="px-4 py-2.5 bg-black hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" />
               <span>Adicionar Produto</span>
             </button>
           </div>
+
+          {!companyId && !loading && (
+            <div className="flex items-start gap-2.5 p-4 bg-amber-50 border border-amber-100 rounded-2xl text-xs font-semibold text-amber-700">
+              <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Estabelecimento não configurado</p>
+                <p className="font-normal text-amber-600 mt-0.5">Vá até a aba de <strong>Configurações</strong>, defina o nome da sua loja e salve para poder gerenciar seus produtos.</p>
+              </div>
+            </div>
+          )}
 
           {error && (
             <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-2xl text-xs font-semibold text-red-600">
@@ -198,8 +218,8 @@ export default function Products() {
               Nenhum item cadastrado no seu portfólio de vendas.
             </div>
           ) : (
-            <div className="bg-white border border-gray-100 rounded-3xl overflow-hidden shadow-2xs">
-              <table className="w-full text-left border-collapse">
+            <div className="bg-white border border-gray-100 rounded-3xl overflow-x-auto shadow-2xs">
+              <table className="w-full text-left border-collapse min-w-[600px]">
                 <thead>
                   <tr className="border-b border-gray-50 bg-gray-50/40 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
                     <th className="p-4">Foto</th>
@@ -264,10 +284,10 @@ export default function Products() {
             </div>
           )}
 
-          {/* MODAL SUSPENSO: Adicionar ou Editar */}
+          {/* MODAL SUSPENSO */}
           {isModalOpen && (
             <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 animate-in zoom-in-95 duration-200 space-y-4">
+              <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-gray-900">
                     {editingId ? "Editar Informações do Produto" : "Cadastrar Novo Produto"}
@@ -276,8 +296,6 @@ export default function Products() {
                 </div>
 
                 <form onSubmit={handleSaveProduct} className="space-y-4">
-                  
-                  {/* Upload de Imagem */}
                   <div className="space-y-1.5">
                     <label className="text-[11px] font-bold text-gray-500 uppercase">Imagem de Exibição</label>
                     <div className="flex items-center gap-3">
@@ -306,7 +324,7 @@ export default function Products() {
                         </label>
                       )}
                       <div className="text-[10px] text-gray-400 font-medium">
-                        Selecione um arquivo quadrado (PNG ou JPG) para renderização nas listagens e balcão de vendas.
+                        Selecione um arquivo de imagem para o portfólio de vendas.
                       </div>
                     </div>
                   </div>
