@@ -137,12 +137,21 @@ export default function Sales() {
 
       const finalTip = hasTip ? (parseFloat(tip) || 0) : 0;
 
+      // Tratamento seguro da data para o formato aceito pelo Supabase (Timestamptz)
+      let dataFormatada = new Date().toISOString(); 
+      if (saleDate) {
+        const d = new Date(saleDate);
+        if (!isNaN(d.getTime())) {
+          dataFormatada = d.toISOString();
+        }
+      }
+
       const salePayload = {
         payment_method: paymentMethod,
-        total: totalSaleAmount + finalTip,
+        total: Number((totalSaleAmount + finalTip).toFixed(2)),
         company_id: companyId,
-        observation: observation || null,
-        created_at: new Date(saleDate).toISOString()
+        observation: observation?.trim() || null,
+        created_at: dataFormatada
       };
 
       const { data: newSale, error: saleErr } = await supabase
@@ -156,8 +165,8 @@ export default function Sales() {
       const itemsPayload = cart.map(item => ({
         sale_id: newSale.id,
         product_id: item.product_id,
-        quantity: item.quantity,
-        price: item.price
+        quantity: parseInt(item.quantity, 10),
+        price: parseFloat(item.price)
       }));
 
       const { error: itemsErr } = await supabase.from("sale_items").insert(itemsPayload);
@@ -166,7 +175,7 @@ export default function Sales() {
       setIsModalOpen(false);
       loadData();
     } catch (err) {
-      console.error(err);
+      console.error("Erro exato do Supabase:", err);
       setError(`Falha ao salvar: ${err.message || "Erro de validação nos campos."}`);
     } finally {
       setSubmitting(false);
