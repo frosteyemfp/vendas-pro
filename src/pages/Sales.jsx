@@ -4,7 +4,7 @@ import Sidebar from "../components/Sidebar";
 import { useAuth } from "../context/AuthContext";
 import { 
   Plus, Trash2, Loader2, AlertCircle, X, 
-  ChevronDown, ChevronUp, CreditCard, Calendar
+  ChevronDown, ChevronUp, CreditCard, Calendar, Search
 } from "lucide-react";
 
 export default function Sales() {
@@ -15,9 +15,10 @@ export default function Sales() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Controle de Modais e Expansão de Itens
+  // Controle de Modais, Expansão e Busca
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [expandedSaleId, setExpandedSaleId] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Estados do Formulário de Venda
   const [saleDate, setSaleDate] = useState("");
@@ -27,7 +28,7 @@ export default function Sales() {
   const [observation, setObservation] = useState("");
   const [cart, setCart] = useState([]); 
 
-  // Carrega Vendas e Produtos fazendo o relacionamento correto para pegar o nome do produto
+  // Carrega Vendas e Produtos
   async function loadData() {
     try {
       setLoading(true);
@@ -40,7 +41,6 @@ export default function Sales() {
         .order("name", { ascending: true });
       setProducts(prods || []);
 
-      // Buscando os itens da venda e trazendo o nome do produto associado a partir do product_id
       const { data: sls, error: err } = await supabase
         .from("sales")
         .select(`*, sale_items(*, products(name))`)
@@ -72,6 +72,7 @@ export default function Sales() {
     setTip("");
     setObservation("");
     setCart([]);
+    setSearchTerm("");
     setIsModalOpen(true);
   }
 
@@ -143,6 +144,7 @@ export default function Sales() {
         payment_method: paymentMethod,
         total: totalSaleAmount + finalTip,
         company_id: companyId,
+        observation: observation || null, // Incluído caso sua tabela tenha esse campo
         created_at: new Date(saleDate).toISOString()
       };
 
@@ -174,14 +176,13 @@ export default function Sales() {
     }
   }
 
-  // FUNÇÃO ATUALIZADA: Agora deleta os itens da tabela correta primeiro para acionar o Trigger
   async function handleDeleteSale(id) {
     if (!confirm("Excluir esta venda reverterá os dados e estornará os itens ao estoque. Deseja prosseguir?")) return;
     try {
       setLoading(true);
       setError(null);
 
-      // 1. Deleta primeiro da sale_items para ativar o trigger que devolve os produtos ao estoque
+      // 1. Deleta itens para ativar o Trigger de estorno de estoque
       const { error: itemsErr } = await supabase
         .from("sale_items")
         .delete()
@@ -189,7 +190,7 @@ export default function Sales() {
         
       if (itemsErr) throw itemsErr;
 
-      // 2. Com os itens limpos e estoque estornado, remove o registro pai da tabela sales
+      // 2. Remove o registro pai
       const { error: saleErr } = await supabase
         .from("sales")
         .delete()
@@ -205,6 +206,11 @@ export default function Sales() {
       setLoading(false);
     }
   }
+
+  // Filtragem dos produtos em tempo real
+  const filteredProducts = products.filter(p => 
+    p.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   return (
     <div className="flex min-h-screen bg-[#fafafa] text-black font-sans antialiased select-none">
@@ -249,7 +255,7 @@ export default function Sales() {
                 const totalItems = sale.sale_items ? sale.sale_items.reduce((acc, i) => acc + i.quantity, 0) : 0;
 
                 return (
-                  <div key={sale.id} className="bg-white border border-gray-100 rounded-2xl shadow-2xs overflow-hidden transition-all">
+                  <div key={sale.id} className="bg-white border border-gray-100 rounded-2xl shadow-xs overflow-hidden transition-all">
                     <div 
                       onClick={() => setExpandedSaleId(isExpanded ? null : sale.id)}
                       className="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50/40 transition-colors"
@@ -270,9 +276,8 @@ export default function Sales() {
                       </div>
                     </div>
 
-                    {/* Expandido - Detalhes do Relacionamento */}
                     {isExpanded && (
-                      <div className="px-4 pb-4 border-t border-gray-50 bg-gray-50/20 space-y-3 pt-3 animate-in fade-in duration-200">
+                      <div className="px-4 pb-4 border-t border-gray-50 bg-gray-50/20 space-y-3 pt-3">
                         <div className="space-y-2">
                           {sale.sale_items?.map((item, idx) => (
                             <div key={idx} className="flex items-center justify-between text-xs bg-white p-2.5 rounded-xl border border-gray-100 font-semibold">
@@ -281,6 +286,9 @@ export default function Sales() {
                             </div>
                           ))}
                         </div>
+                        {sale.observation && (
+                          <p className="text-[11px] text-gray-500 bg-gray-100 p-2 rounded-lg italic">Obs: {sale.observation}</p>
+                        )}
                         <div className="flex justify-end pt-1">
                           <button 
                             onClick={(e) => { e.stopPropagation(); handleDeleteSale(sale.id); }}
@@ -395,7 +403,7 @@ export default function Sales() {
                     </div>
                     <button 
                       type="submit" disabled={submitting}
-                      className="w-full py-3 bg-zinc-400 hover:bg-black text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
+                      className="w-full py-3 bg-black hover:bg-zinc-800 disabled:bg-zinc-400 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5"
                     >
                       {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
                       <span>Finalizar Venda</span>
@@ -405,38 +413,48 @@ export default function Sales() {
 
                 {/* Coluna Catálogo Lateral */}
                 <div className="flex flex-col border-l border-gray-100 pl-0 md:pl-6 space-y-3">
-                  <div className="space-y-0.5">
+                  <div className="space-y-1">
                     <h4 className="text-xs font-bold text-gray-900">Produtos</h4>
-                    <input 
-                      type="text" placeholder="Buscar produto..."
-                      className="w-full p-2 bg-gray-50 border border-gray-100 rounded-xl text-xs font-medium focus:outline-none"
-                    />
+                    <div className="relative flex items-center">
+                      <input 
+                        type="text" 
+                        placeholder="Buscar produto..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="w-full p-2 pl-7 bg-gray-50 border border-gray-100 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-gray-200 transition-all"
+                      />
+                      <Search className="w-3.5 h-3.5 text-gray-400 absolute left-2.5" />
+                    </div>
                   </div>
 
                   <div className="flex-1 max-h-[400px] overflow-y-auto space-y-2 pr-1">
-                    {products.map(p => {
-                      const itemInCart = cart.find(i => i.product_id === p.id);
-                      const currentQty = itemInCart ? itemInCart.quantity : 0;
-                      const isOutOfStock = p.stock <= 0 || currentQty >= p.stock;
+                    {filteredProducts.length === 0 ? (
+                      <p className="text-[11px] text-center text-gray-400 py-6">Nenhum produto encontrado.</p>
+                    ) : (
+                      filteredProducts.map(p => {
+                        const itemInCart = cart.find(i => i.product_id === p.id);
+                        const currentQty = itemInCart ? itemInCart.quantity : 0;
+                        const isOutOfStock = p.stock <= 0 || currentQty >= p.stock;
 
-                      return (
-                        <div key={p.id} className="p-3 border border-gray-100 rounded-2xl flex items-center justify-between bg-white shadow-3xs">
-                          <div className="space-y-0.5">
-                            <span className="text-xs font-bold text-gray-900 block">{p.name}</span>
-                            <span className="text-xs font-black text-zinc-600 block">R$ {(p.price || 0).toFixed(2)}</span>
-                            <span className="text-[9px] font-medium text-gray-400 block">Estoque: {p.stock - currentQty} un</span>
+                        return (
+                          <div key={p.id} className="p-3 border border-gray-100 rounded-2xl flex items-center justify-between bg-white shadow-3xs">
+                            <div className="space-y-0.5">
+                              <span className="text-xs font-bold text-gray-900 block">{p.name}</span>
+                              <span className="text-xs font-black text-zinc-600 block">R$ {(p.price || 0).toFixed(2)}</span>
+                              <span className="text-[9px] font-medium text-gray-400 block">Estoque: {p.stock - currentQty} un</span>
+                            </div>
+                            <button
+                              type="button"
+                              disabled={isOutOfStock}
+                              onClick={() => handleAddToBag(p.id)}
+                              className="px-2.5 py-1.5 bg-gray-50 hover:bg-black hover:text-white border border-gray-100 rounded-xl text-[11px] font-bold transition-all disabled:opacity-40"
+                            >
+                              + Adicionar
+                            </button>
                           </div>
-                          <button
-                            type="button"
-                            disabled={isOutOfStock}
-                            onClick={() => handleAddToBag(p.id)}
-                            className="px-2.5 py-1.5 bg-gray-50 hover:bg-black hover:text-white border border-gray-100 rounded-xl text-[11px] font-bold transition-all disabled:opacity-40"
-                          >
-                            + Adicionar
-                          </button>
-                        </div>
-                      );
-                    })}
+                        );
+                      })
+                    )}
                   </div>
                 </div>
 

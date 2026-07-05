@@ -1,50 +1,27 @@
 @import "tailwindcss";
 
 @theme {
-  /* Tons oficiais inspirados no modo escuro do ChatGPT */
-  --color-chat-bg-light: #FFFFFF;
-  --color-chat-bg-dark: #212121; /* Cinza dos cards do ChatGPT */
-  --color-chat-input-dark: #2f2f2f;
-  --color-chat-sidebar-dark: #171717; /* Lateral escura do ChatGPT */
-  --color-chat-main-dark: #212121;
-  
-  /* Sombras e bordas limpas */
-  --shadow-premium: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  --shadow-premium-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  /* Cores exatas do ecossistema ChatGPT */
+  --color-chat-bg: #212121;       /* Fundo principal */
+  --color-chat-card: #2f2f2f;     /* Cards internos e inputs */
+  --color-chat-sidebar: #171717;  /* Sidebar lateral */
+  --color-chat-text: #ececec;     /* Texto claro padrão */
 }
 
-/* Ativação do Modo Escuro via classe HTML no Tailwind v4 */
 @variant dark (&:where(.dark, .dark *));
 
 @layer base {
   body {
-    background-color: var(--color-chat-bg-light);
+    background-color: #ffffff;
     color: #0f172a;
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    font-family: 'Inter', system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
-    transition-property: color, background-color;
-    transition-duration: 200ms;
+    transition: background-color 0.2s ease, color 0.2s ease;
   }
 
-  /* Quando a classe .dark estiver ativa, aplica o tema escuro do ChatGPT globalmente */
+  /* Força todas as páginas a herdarem o tom do ChatGPT quando o .dark estiver ativo */
   .dark body {
-    background-color: var(--color-chat-main-dark);
-    color: #ececec;
+    background-color: var(--color-chat-bg);
+    color: var(--color-chat-text);
   }
-}
-
-/* Custom Scrollbar minimalista */
-::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
-}
-::-webkit-scrollbar-track {
-  background: transparent;
-}
-::-webkit-scrollbar-thumb {
-  background-color: #e2e8f0;
-  border-radius: 9999px;
-}
-.dark ::-webkit-scrollbar-thumb {
-  background-color: #3f3f46;
 }

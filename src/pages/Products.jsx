@@ -11,7 +11,6 @@ export default function Products() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState(null);
 
-  // Estados dos Campos do Formulário
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingId, setEditingId] = useState(null); 
   const [name, setName] = useState("");
@@ -171,22 +170,22 @@ export default function Products() {
   }
 
   return (
-    <div className="flex min-h-screen bg-[#fafafa] text-black font-sans antialiased select-none">
+    <div className="flex min-h-screen bg-neutral-50 dark:bg-[#212121] text-zinc-900 dark:text-[#ececec] font-sans antialiased select-none transition-colors duration-200">
       <Sidebar />
 
-      {/* pt-20 corrige o espaçamento mobile para não sumir atrás da barra superior */}
-      <main className="flex-1 p-6 md:p-10 ml-0 md:ml-64 pt-20 md:pt-10 transition-all duration-300">
+      {/* RECUO PRINCIPAL: pt-24 impede sobreposições do topo no celular */}
+      <main className="flex-1 p-4 md:p-10 ml-0 md:ml-64 pt-24 md:pt-10 pb-24 transition-all duration-300">
         <div className="max-w-4xl mx-auto space-y-6">
           
           {/* Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold text-gray-900">Cadastro de Produtos</h1>
-              <p className="text-xs text-gray-400 font-medium">Controle seu catálogo de mercadorias, custos e estoque ativo</p>
+              <h1 className="text-xl md:text-2xl font-bold text-zinc-950 dark:text-white">Cadastro de Produtos</h1>
+              <p className="text-xs text-zinc-400 dark:text-zinc-400 font-medium">Controle seu catálogo de mercadorias, custos e estoque ativo</p>
             </div>
             <button 
               onClick={handleOpenAdd}
-              className="px-4 py-2.5 bg-black hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
+              className="px-4 py-2.5 bg-zinc-950 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-2 shadow-sm"
             >
               <Plus className="h-4 w-4" />
               <span>Adicionar Produto</span>
@@ -194,193 +193,164 @@ export default function Products() {
           </div>
 
           {!companyId && !loading && (
-            <div className="flex items-start gap-2.5 p-4 bg-amber-50 border border-amber-100 rounded-2xl text-xs font-semibold text-amber-700">
+            <div className="flex items-start gap-2.5 p-4 bg-amber-500/10 border border-amber-500/20 rounded-2xl text-xs font-semibold text-amber-500">
               <AlertCircle className="h-4 w-4 shrink-0 mt-0.5" />
               <div>
                 <p className="font-bold">Estabelecimento não configurado</p>
-                <p className="font-normal text-amber-600 mt-0.5">Vá até a aba de <strong>Configurações</strong>, defina o nome da sua loja e salve para poder gerenciar seus produtos.</p>
+                <p className="font-normal opacity-90 mt-0.5">Vá até a aba de <strong>Configurações</strong>, defina o nome da sua loja e salve para poder gerenciar seus produtos.</p>
               </div>
             </div>
           )}
 
           {error && (
-            <div className="flex items-center gap-2 p-4 bg-red-50 border border-red-100 rounded-2xl text-xs font-semibold text-red-600">
+            <div className="flex items-center gap-2 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-xs font-semibold text-red-500">
               <AlertCircle className="h-4 w-4" />
               <span>{error}</span>
             </div>
           )}
 
-          {/* Grid de Listagem */}
+          {/* Listagem de Itens */}
           {loading ? (
-            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-gray-400" /></div>
+            <div className="flex justify-center py-12"><Loader2 className="h-6 w-6 animate-spin text-zinc-400" /></div>
           ) : products.length === 0 ? (
-            <div className="py-16 text-center text-xs font-medium text-gray-400 border border-dashed border-gray-100 rounded-2xl bg-white">
+            <div className="py-16 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl bg-white dark:bg-[#2f2f2f]">
               Nenhum item cadastrado no seu portfólio de vendas.
             </div>
           ) : (
-            <div className="bg-white border border-gray-100 rounded-3xl overflow-x-auto shadow-2xs">
-              <table className="w-full text-left border-collapse min-w-[600px]">
-                <thead>
-                  <tr className="border-b border-gray-50 bg-gray-50/40 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                    <th className="p-4">Foto</th>
-                    <th className="p-4">Item / Nome</th>
-                    <th className="p-4">Preço Custo</th>
-                    <th className="p-4">Preço Venda</th>
-                    <th className="p-4 text-center">Estoque</th>
-                    <th className="p-4 text-right">Ações</th>
-                  </tr>
-                </thead>
-                <tbody className="text-xs font-semibold text-gray-700 divide-y divide-gray-50">
-                  {products.map((product) => {
-                    const isOutOfStock = product.stock <= 0;
+            <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-100 dark:border-zinc-700/50 rounded-3xl overflow-hidden shadow-xs">
+              <div className="overflow-x-auto">
+                <table className="w-full text-left border-collapse min-w-[600px]">
+                  <thead>
+                    <tr className="border-b border-zinc-100 dark:border-zinc-700/40 bg-zinc-50/40 dark:bg-[#212121]/40 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                      <th className="p-4 w-16">Foto</th>
+                      <th className="p-4">Item / Nome</th>
+                      <th className="p-4">Preço Custo</th>
+                      <th className="p-4">Preço Venda</th>
+                      <th className="p-4 text-center">Estoque</th>
+                      <th className="p-4 text-right">Ações</th>
+                    </tr>
+                  </thead>
+                  <tbody className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 divide-y divide-zinc-100 dark:divide-zinc-700/40">
+                    {products.map((product) => {
+                      const isOutOfStock = product.stock <= 0;
 
-                    return (
-                      <tr 
-                        key={product.id} 
-                        className={`hover:bg-gray-50/30 transition-all duration-200 ${
-                          isOutOfStock ? "opacity-40 grayscale-[25%]" : ""
-                        }`}
-                      >
-                        <td className="p-4">
-                          {product.image_url ? (
-                            <img src={product.image_url} alt={product.name} className="w-9 h-9 object-cover rounded-xl border border-gray-100 shadow-2xs" />
-                          ) : (
-                            <div className="w-9 h-9 bg-gray-50 border border-gray-100 rounded-xl flex items-center justify-center text-gray-400"><ImageIcon className="w-4 h-4" /></div>
-                          )}
-                        </td>
-                        <td className="p-4 text-gray-900 font-bold">{product.name}</td>
-                        <td className="p-4 text-gray-500">R$ {(product.cost_price || 0).toFixed(2)}</td>
-                        <td className="p-4 text-gray-900">R$ {(product.price || 0).toFixed(2)}</td>
-                        <td className="p-4 text-center">
-                          <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold tracking-tight ${
-                            isOutOfStock 
-                              ? "bg-red-100 text-red-700 font-extrabold uppercase" 
-                              : product.stock <= 5 
-                                ? "bg-amber-50 text-amber-700" 
-                                : "bg-gray-50 text-gray-600"
-                          }`}>
-                            {isOutOfStock ? "Esgotado" : `${product.stock} un`}
-                          </span>
-                        </td>
-                        <td className="p-4 text-right flex items-center justify-end gap-2">
-                          <button 
-                            onClick={() => handleOpenEdit(product)}
-                            className="p-1.5 hover:bg-gray-100 text-gray-600 rounded-lg transition-all"
-                          >
-                            <Edit2 className="h-3.5 w-3.5" />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteProduct(product.id)}
-                            className="p-1.5 hover:bg-red-50 text-red-600 rounded-lg transition-all"
-                          >
-                            <Trash2 className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+                      return (
+                        <tr 
+                          key={product.id} 
+                          className={`hover:bg-zinc-50/30 dark:hover:bg-[#212121]/30 transition-all duration-200 ${
+                            isOutOfStock ? "opacity-40" : ""
+                          }`}
+                        >
+                          <td className="p-4">
+                            {product.image_url ? (
+                              <img src={product.image_url} alt={product.name} className="w-9 h-9 object-cover rounded-xl border border-zinc-100 dark:border-zinc-700 shadow-xs" />
+                            ) : (
+                              <div className="w-9 h-9 bg-zinc-50 dark:bg-[#212121] border border-zinc-100 dark:border-zinc-700 rounded-xl flex items-center justify-center text-zinc-400"><ImageIcon className="w-4 h-4" /></div>
+                            )}
+                          </td>
+                          <td className="p-4 text-zinc-950 dark:text-white font-bold">{product.name}</td>
+                          <td className="p-4 text-zinc-400 dark:text-zinc-500">R$ {(product.cost_price || 0).toFixed(2)}</td>
+                          <td className="p-4 text-zinc-950 dark:text-zinc-200">R$ {(product.price || 0).toFixed(2)}</td>
+                          <td className="p-4 text-center">
+                            <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                              isOutOfStock 
+                                ? "bg-red-500/10 text-red-500" 
+                                : product.stock <= 5 
+                                  ? "bg-amber-500/10 text-amber-500" 
+                                  : "bg-zinc-100 dark:bg-[#212121] text-zinc-600 dark:text-zinc-400"
+                            }`}>
+                              {isOutOfStock ? "Esgotado" : `${product.stock} un`}
+                            </span>
+                          </td>
+                          <td className="p-4 text-right flex items-center justify-end gap-2">
+                            <button 
+                              onClick={() => handleOpenEdit(product)}
+                              className="p-1.5 hover:bg-zinc-100 dark:hover:bg-[#212121] text-zinc-500 dark:text-zinc-400 rounded-lg transition-all"
+                            >
+                              <Edit2 className="h-3.5 w-3.5" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteProduct(product.id)}
+                              className="p-1.5 hover:bg-red-500/10 text-red-500 rounded-lg transition-all"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
             </div>
           )}
 
           {/* MODAL SUSPENSO */}
           {isModalOpen && (
-            <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-xs flex items-center justify-center p-4">
-              <div className="bg-white rounded-3xl w-full max-w-md p-6 shadow-2xl border border-gray-100 space-y-4 max-h-[90vh] overflow-y-auto">
+            <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="bg-white dark:bg-[#2f2f2f] rounded-3xl w-full max-w-md p-6 shadow-2xl border border-zinc-100 dark:border-zinc-700/60 space-y-4 max-h-[90vh] overflow-y-auto">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-gray-900">
+                  <h3 className="text-sm font-bold text-zinc-950 dark:text-white">
                     {editingId ? "Editar Informações do Produto" : "Cadastrar Novo Produto"}
                   </h3>
-                  <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-gray-50 rounded-lg"><X className="h-4 w-4 text-gray-400" /></button>
+                  <button onClick={() => setIsModalOpen(false)} className="p-1 hover:bg-zinc-100 dark:hover:bg-zinc-800 rounded-lg"><X className="h-4 w-4 text-zinc-400" /></button>
                 </div>
 
                 <form onSubmit={handleSaveProduct} className="space-y-4">
                   <div className="space-y-1.5">
-                    <label className="text-[11px] font-bold text-gray-500 uppercase">Imagem de Exibição</label>
+                    <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-400 uppercase">Imagem de Exibição</label>
                     <div className="flex items-center gap-3">
                       {imageUrl ? (
-                        <div className="relative group w-16 h-16 rounded-xl overflow-hidden border border-gray-200">
+                        <div className="relative group w-16 h-16 rounded-xl overflow-hidden border border-zinc-200 dark:border-zinc-700">
                           <img src={imageUrl} className="w-full h-full object-cover" />
                           <button 
                             type="button" 
                             onClick={() => setImageUrl("")}
-                            className="absolute inset-0 bg-black/60 text-white text-[10px] font-bold flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                            className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-[10px] font-bold"
                           >
-                            Trocar
+                            Remover
                           </button>
                         </div>
                       ) : (
-                        <label className="w-16 h-16 border-2 border-dashed border-gray-200 rounded-xl flex flex-col items-center justify-center cursor-pointer hover:bg-gray-50 transition-colors">
-                          {uploading ? (
-                            <Loader2 className="h-4 w-4 animate-spin text-gray-400" />
-                          ) : (
-                            <>
-                              <UploadCloud className="h-4 w-4 text-gray-400" />
-                              <span className="text-[8px] font-bold text-gray-400 mt-0.5">Upload</span>
-                            </>
-                          )}
+                        <label className="w-16 h-16 rounded-xl border-2 border-dashed border-zinc-300 dark:border-zinc-700 hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-colors flex flex-col items-center justify-center cursor-pointer text-zinc-400">
+                          <UploadCloud className="h-4 w-4" />
+                          <span className="text-[9px] font-bold mt-1">Upload</span>
                           <input type="file" accept="image/*" disabled={uploading} onChange={handleUploadImage} className="hidden" />
                         </label>
                       )}
-                      <div className="text-[10px] text-gray-400 font-medium">
-                        Selecione um arquivo de imagem para o portfólio de vendas.
-                      </div>
+                      {uploading && <Loader2 className="h-4 w-4 animate-spin text-zinc-400" />}
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-gray-500 uppercase">Nome Comercial</label>
-                    <input 
-                      type="text" required value={name} onChange={(e) => setName(e.target.value)}
-                      placeholder="Ex: Ração Golden 15kg"
-                      className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:bg-white focus:border-black transition-all"
-                    />
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-400 uppercase">Nome do Item</label>
+                    <input type="text" required value={name} onChange={(e) => setName(e.target.value)} className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none" placeholder="Ex: Coca-Cola Lata 350ml" />
                   </div>
 
                   <div className="grid grid-cols-2 gap-3">
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-gray-500 uppercase">Preço Custo (R$)</label>
-                      <input 
-                        type="number" step="0.01" value={costPrice} onChange={(e) => setCostPrice(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:bg-white focus:border-black transition-all"
-                      />
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-400 uppercase">Preço de Custo (R$)</label>
+                      <input type="number" step="0.01" value={costPrice} onChange={(e) => setCostPrice(e.target.value)} className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none" placeholder="0.00" />
                     </div>
-                    <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-gray-500 uppercase">Preço Venda (R$)</label>
-                      <input 
-                        type="number" step="0.01" required value={salePrice} onChange={(e) => setSalePrice(e.target.value)}
-                        placeholder="0.00"
-                        className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:bg-white focus:border-black transition-all"
-                      />
+                    <div className="space-y-1.5">
+                      <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-400 uppercase">Preço de Venda (R$)</label>
+                      <input type="number" step="0.01" required value={salePrice} onChange={(e) => setSalePrice(e.target.value)} className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none" placeholder="0.00" />
                     </div>
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[11px] font-bold text-gray-500 uppercase">Quantidade em Estoque</label>
-                    <input 
-                      type="number" required value={stock} onChange={(e) => setStock(e.target.value)}
-                      placeholder="Ex: 50"
-                      className="w-full p-2.5 bg-gray-50 border border-gray-200 rounded-xl text-xs font-semibold focus:outline-none focus:bg-white focus:border-black transition-all"
-                    />
+                  <div className="space-y-1.5">
+                    <label className="text-[11px] font-bold text-zinc-400 dark:text-zinc-400 uppercase">Estoque Inicial (Qtd)</label>
+                    <input type="number" required value={stock} onChange={(e) => setStock(e.target.value)} className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none" placeholder="Ex: 50" />
                   </div>
 
-                  <div className="flex gap-2 pt-2">
-                    <button 
-                      type="button" onClick={() => setIsModalOpen(false)}
-                      className="flex-1 py-2.5 border border-gray-200 bg-white hover:bg-gray-50 rounded-xl text-xs font-bold text-gray-600 transition-all"
-                    >
-                      Cancelar
-                    </button>
-                    <button 
-                      type="submit" disabled={submitting || uploading}
-                      className="flex-1 py-2.5 bg-black hover:bg-zinc-800 text-white rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 disabled:opacity-50"
-                    >
-                      {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
-                      <span>{editingId ? "Salvar Alterações" : "Cadastrar Item"}</span>
-                    </button>
-                  </div>
+                  <button 
+                    type="submit" 
+                    disabled={submitting || uploading}
+                    className="w-full bg-zinc-950 hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 text-white text-xs font-bold p-3 rounded-xl transition-all flex items-center justify-center gap-2"
+                  >
+                    {submitting ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+                    <span>{editingId ? "Salvar Alterações" : "Concluir Cadastro"}</span>
+                  </button>
                 </form>
               </div>
             </div>
