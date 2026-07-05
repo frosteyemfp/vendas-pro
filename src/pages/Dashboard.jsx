@@ -11,8 +11,6 @@ import {
   DollarSign,
   ArrowUpRight,
   TrendingDown,
-  Users,
-  ShoppingBag,
   Coins
 } from "lucide-react";
 
@@ -147,7 +145,7 @@ export default function Dashboard() {
 
   function resetData() {
     setMetrics({ totalRevenue: 0, salesCount: 0, uniqueCustomers: 0, totalCost: 0, totalProfit: 0 });
-    setPaymentBreakdown({ pix: 0, dinero: 0, debito: 0, credito: 0, gorjeta: 0, total: 0 });
+    setPaymentBreakdown({ pix: 0, dinheiro: 0, debito: 0, credito: 0, gorjeta: 0, total: 0 });
     setChartDays([]);
   }
 
@@ -159,22 +157,21 @@ export default function Dashboard() {
   const maxVendas = Math.max(...chartDays.map(d => d.vendas), 1);
 
   return (
-    <div className="flex min-h-screen bg-neutral-50 dark:bg-[#212121] text-zinc-900 dark:text-[#ececec] font-sans antialiased select-none transition-colors duration-200">
+    <div className="flex min-h-screen w-full bg-white dark:bg-chat-bg text-zinc-900 dark:text-chat-text font-sans antialiased select-none transition-colors duration-200">
       <Sidebar />
 
-      {/* AJUSTE MOBILE: pt-24 e md:pt-10 evitam que a barra de três pontos do celular suma com o título */}
-      <main className="flex-1 p-4 md:p-10 ml-0 md:ml-64 pt-24 md:pt-10 pb-24 transition-all duration-300">
+      <main className="flex-1 w-full p-4 md:p-10 ml-0 md:ml-64 pt-24 md:pt-10 pb-24 transition-all duration-300">
         <div className="max-w-5xl mx-auto space-y-6">
           
           {/* Top Bar de Filtros */}
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-[#2f2f2f] border border-zinc-100 dark:border-zinc-700/50 p-4 rounded-2xl shadow-xs">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 bg-white dark:bg-chat-card border border-zinc-100 dark:border-zinc-800/80 p-4 rounded-2xl shadow-xs">
             <div>
               <h1 className="text-xl font-bold text-zinc-950 dark:text-white">Rendimentos & Análises</h1>
               <p className="text-[11px] text-zinc-400 dark:text-zinc-400 font-medium">Balanço do faturamento, meios de pagamento e lucratividade</p>
             </div>
             
             <div className="flex items-center gap-2">
-              <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-[#212121] p-1.5 rounded-xl border border-zinc-100 dark:border-zinc-700">
+              <div className="flex items-center gap-1.5 bg-zinc-50 dark:bg-chat-bg p-1.5 rounded-xl border border-zinc-100 dark:border-zinc-800">
                 <input 
                   type="date" 
                   value={startDate} 
@@ -205,8 +202,8 @@ export default function Dashboard() {
             </div>
           )}
 
-          {/* PARTE 1: Gráfico de Desempenho */}
-          <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-100 dark:border-zinc-700/50 rounded-3xl p-6 shadow-xs space-y-6">
+          {/* Gráfico de Desempenho */}
+          <div className="bg-white dark:bg-chat-card border border-zinc-100 dark:border-zinc-800/80 rounded-3xl p-6 shadow-xs space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
                 <h2 className="text-sm font-bold text-zinc-950 dark:text-white">Histórico de Performance do Período</h2>
@@ -221,21 +218,21 @@ export default function Dashboard() {
             </div>
 
             {loading ? (
-              <div className="h-44 bg-zinc-50 dark:bg-[#212121] rounded-2xl animate-pulse" />
+              <div className="h-44 bg-zinc-50 dark:bg-chat-bg rounded-2xl animate-pulse" />
             ) : chartDays.length === 0 ? (
-              <div className="py-12 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500 border border-dashed border-zinc-200 dark:border-zinc-700 rounded-2xl">
+              <div className="py-12 text-center text-xs font-medium text-zinc-400 dark:text-zinc-500 border border-dashed border-zinc-200 dark:border-zinc-800 rounded-2xl">
                 Nenhum registro encontrado para gerar o gráfico neste intervalo.
               </div>
             ) : (
               <div className="space-y-2">
-                <div className="h-44 w-full flex items-end gap-2.5 pt-4 border-b border-zinc-100 dark:border-zinc-700/60 px-2 overflow-x-auto">
+                <div className="h-44 w-full flex items-end gap-2.5 pt-4 border-b border-zinc-100 dark:border-zinc-800/60 px-2 overflow-x-auto">
                   {chartDays.map((d, idx) => {
                     const heightReais = (d.reais / maxReais) * 100;
                     const heightVendas = (d.vendas / maxVendas) * 100;
 
                     return (
                       <div key={idx} className="flex-1 min-w-[45px] h-full flex flex-col justify-end items-center relative group">
-                        <div className="absolute bottom-full mb-2 bg-zinc-950 dark:bg-[#171717] text-white rounded-lg p-2 text-[9px] font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg space-y-0.5 whitespace-nowrap border dark:border-zinc-700">
+                        <div className="absolute bottom-full mb-2 bg-zinc-950 dark:bg-chat-sidebar text-white rounded-lg p-2 text-[9px] font-medium opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-10 shadow-lg space-y-0.5 whitespace-nowrap border dark:border-zinc-800">
                           <p className="font-bold border-b border-zinc-800 dark:border-zinc-800 pb-0.5 text-zinc-400">{d.day}</p>
                           <p>Faturamento: R$ {d.reais.toFixed(2)}</p>
                           <p>Vendas feitas: {d.vendas}</p>
@@ -253,7 +250,7 @@ export default function Dashboard() {
                           />
                           <div 
                             style={{ marginBottom: `${Math.max(heightVendas, 8)}%` }}
-                            className="w-2 h-2 bg-emerald-500 rounded-full border border-white dark:border-[#2f2f2f] absolute shadow-xs"
+                            className="w-2 h-2 bg-emerald-500 rounded-full border border-white dark:border-chat-card absolute shadow-xs"
                           />
                         </div>
                       </div>
@@ -272,8 +269,8 @@ export default function Dashboard() {
           {/* Grid Inferior */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             
-            {/* PARTE 2: Tipo de Moeda */}
-            <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-100 dark:border-zinc-700/50 rounded-3xl p-4 md:p-6 shadow-xs flex flex-col space-y-4">
+            {/* Tipo de Moeda */}
+            <div className="bg-white dark:bg-chat-card border border-zinc-100 dark:border-zinc-800/80 rounded-3xl p-4 md:p-6 shadow-xs flex flex-col space-y-4">
               <div>
                 <h2 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-1.5">
                   <Coins className="h-4 w-4 text-zinc-400" />
@@ -282,15 +279,15 @@ export default function Dashboard() {
                 <p className="text-[11px] text-zinc-400 dark:text-zinc-400">Detalhamento dos valores brutos que entraram em caixa</p>
               </div>
 
-              <div className="flex-1 overflow-hidden border border-zinc-100 dark:border-zinc-700/50 rounded-2xl bg-zinc-50/20 dark:bg-[#212121]/30">
+              <div className="flex-1 overflow-hidden border border-zinc-100 dark:border-zinc-800/50 rounded-2xl bg-zinc-50/20 dark:bg-chat-bg/30">
                 <table className="w-full text-left border-collapse">
                   <thead>
-                    <tr className="border-b border-zinc-100 dark:border-zinc-700/40 bg-zinc-50/50 dark:bg-[#212121]/50 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
+                    <tr className="border-b border-zinc-100 dark:border-zinc-800/40 bg-zinc-50/50 dark:bg-chat-bg/50 text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">
                       <th className="p-3">Meio de Pagamento</th>
                       <th className="p-3 text-right">Valor Recebido</th>
                     </tr>
                   </thead>
-                  <tbody className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 divide-y divide-zinc-100 dark:divide-zinc-700/40">
+                  <tbody className="text-xs font-semibold text-zinc-700 dark:text-zinc-300 divide-y divide-zinc-100 dark:divide-zinc-800/40">
                     <tr>
                       <td className="p-3 flex items-center gap-2">🟢 <span className="text-zinc-900 dark:text-zinc-100">PIX</span></td>
                       <td className="p-3 text-right text-zinc-900 dark:text-white">R$ {paymentBreakdown.pix.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
@@ -311,7 +308,7 @@ export default function Dashboard() {
                       <td className="p-3 flex items-center gap-2">⭐ <span className="text-zinc-900 dark:text-zinc-100">Gorjetas / Extras</span></td>
                       <td className="p-3 text-right text-zinc-900 dark:text-white">R$ {paymentBreakdown.gorjeta.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}</td>
                     </tr>
-                    <tr className="bg-zinc-950 dark:bg-[#171717] text-white font-bold border-t border-zinc-800">
+                    <tr className="bg-zinc-950 dark:bg-chat-sidebar text-white font-bold border-t border-zinc-800">
                       <td className="p-3 rounded-bl-xl">VALOR TOTAL GERAL</td>
                       <td className="p-3 text-right text-sm font-black text-emerald-400 rounded-br-xl">
                         R$ {paymentBreakdown.total.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
@@ -322,8 +319,8 @@ export default function Dashboard() {
               </div>
             </div>
 
-            {/* PARTE 3: Lucratividade Real */}
-            <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-100 dark:border-zinc-700/50 rounded-3xl p-4 md:p-6 shadow-xs flex flex-col justify-between space-y-5">
+            {/* Lucratividade Real */}
+            <div className="bg-white dark:bg-chat-card border border-zinc-100 dark:border-zinc-800/80 rounded-3xl p-4 md:p-6 shadow-xs flex flex-col justify-between space-y-5">
               <div>
                 <h2 className="text-sm font-bold text-zinc-950 dark:text-white flex items-center gap-1.5">
                   <TrendingUp className="h-4 w-4 text-emerald-500" />
@@ -334,7 +331,7 @@ export default function Dashboard() {
 
               <div className="space-y-3 flex-1 flex flex-col justify-center">
                 {/* Custo */}
-                <div className="border border-zinc-100 dark:border-zinc-700/60 bg-zinc-50/40 dark:bg-[#212121]/40 p-3 rounded-2xl flex items-center justify-between">
+                <div className="border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/40 dark:bg-chat-bg/40 p-3 rounded-2xl flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Total Investido (Custo)</p>
                     <h4 className="text-base font-black text-zinc-700 dark:text-zinc-300 mt-0.5">
@@ -345,7 +342,7 @@ export default function Dashboard() {
                 </div>
 
                 {/* Faturamento */}
-                <div className="border border-zinc-100 dark:border-zinc-700/60 bg-zinc-50/40 dark:bg-[#212121]/40 p-3 rounded-2xl flex items-center justify-between">
+                <div className="border border-zinc-100 dark:border-zinc-800/60 bg-zinc-50/40 dark:bg-chat-bg/40 p-3 rounded-2xl flex items-center justify-between">
                   <div>
                     <p className="text-[10px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Faturamento de Vendas</p>
                     <h4 className="text-base font-black text-zinc-950 dark:text-white mt-0.5">
@@ -356,20 +353,20 @@ export default function Dashboard() {
                 </div>
 
                 {/* Lucro Líquido */}
-                <div className="border border-zinc-900 dark:border-zinc-700 bg-zinc-950 dark:bg-[#171717] text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
+                <div className="border border-zinc-900 dark:border-zinc-800 bg-zinc-950 dark:bg-chat-sidebar text-white p-4 rounded-2xl flex items-center justify-between shadow-xs">
                   <div>
                     <p className="text-[9px] font-bold text-zinc-400 dark:text-zinc-500 uppercase tracking-wider">Lucro Líquido Final (Seu Bolso)</p>
                     <h4 className="text-lg font-black text-emerald-400 mt-0.5">
                       R$ {metrics.totalProfit.toLocaleString("pt-BR", { minimumFractionDigits: 2 })}
                     </h4>
                   </div>
-                  <div className="p-2.5 bg-zinc-900 dark:bg-[#212121] text-emerald-400 rounded-xl border border-zinc-800 dark:border-zinc-700">
+                  <div className="p-2.5 bg-zinc-900 dark:bg-chat-bg text-emerald-400 rounded-xl border border-zinc-800 dark:border-zinc-700">
                     <ArrowUpRight className="h-5 w-5" />
                   </div>
                 </div>
               </div>
 
-              <div className="text-[10px] bg-zinc-50 dark:bg-[#212121]/50 border border-zinc-100 dark:border-zinc-700/40 text-zinc-500 dark:text-zinc-400 rounded-xl p-2.5 font-medium text-center">
+              <div className="text-[10px] bg-zinc-50 dark:bg-chat-bg/50 border border-zinc-100 dark:border-zinc-800/40 text-zinc-500 dark:text-zinc-400 rounded-xl p-2.5 font-medium text-center">
                 Margem média operando em aprox. <span className="font-bold text-zinc-950 dark:text-white">{metrics.totalRevenue > 0 ? ((metrics.totalProfit / metrics.totalRevenue) * 100).toFixed(0) : 0}%</span> de retorno líquido sobre as operações.
               </div>
             </div>

@@ -12,8 +12,7 @@ import {
   Save, 
   Sliders,
   User,
-  Key,
-  UploadCloud
+  Key
 } from "lucide-react";
 
 export default function Settings() {
@@ -34,7 +33,7 @@ export default function Settings() {
   const [newPassword, setNewPassword] = useState("");
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event) => {
       if (event === 'PASSWORD_RECOVERY') {
         setShowPasswordResetForm(true);
         showToast("Link validado! Digite sua nova senha abaixo.", "success");
@@ -70,10 +69,8 @@ export default function Settings() {
         setUsername(profile.name || "");
         setAvatarUrl(profile.avatar_url || "");
       }
-      if (!companyId) {
-        setLoading(false);
-        return;
-      }
+      if (!companyId) return;
+      
       const { data, error } = await supabase
         .from("companies")
         .select("*")
@@ -121,6 +118,7 @@ export default function Settings() {
       setAvatarUrl(publicUrl);
       showToast("Foto carregada! Clique em Salvar.");
     } catch (err) {
+      console.error(err);
       showToast("Não foi possível carregar a imagem.", "error");
     } finally {
       setUploading(false);
@@ -136,6 +134,7 @@ export default function Settings() {
       if (error) throw error;
       showToast("E-mail enviado! Verifique sua caixa de entrada.");
     } catch (err) {
+      console.error(err);
       showToast("Falha ao solicitar troca de senha.", "error");
     } finally {
       setSubmitting(false);
@@ -195,6 +194,7 @@ export default function Settings() {
       showToast("Configurações salvas!");
       setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
+      console.error(err);
       showToast("Falha ao salvar as modificações.", "error");
     } finally {
       setSubmitting(false);
@@ -202,12 +202,11 @@ export default function Settings() {
   }
 
   return (
-    // Fundo dinâmico: branco no claro, cinza-chatgpt no escuro
-    <div className="flex min-h-screen bg-neutral-50 dark:bg-[#212121] text-zinc-900 dark:text-[#ececec] font-sans antialiased transition-colors duration-200">
+    <div className="flex min-h-screen bg-neutral-50 dark:bg-[#121212] text-zinc-900 dark:text-[#ececec] font-sans antialiased transition-colors duration-200">
       <Sidebar />
 
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold shadow-premium-md ${
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold shadow-md transition-all ${
           toast.type === "error" 
             ? "bg-red-500 text-white" 
             : "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
@@ -217,7 +216,6 @@ export default function Settings() {
         </div>
       )}
 
-      {/* CORREÇÃO MOBILE: 'pt-24' garante que o menu superior dos 3 pontos nunca tampe o conteúdo */}
       <main className="flex-1 p-4 md:p-10 ml-0 md:ml-64 pt-24 md:pt-10 pb-24 transition-all duration-200">
         <div className="max-w-2xl mx-auto space-y-6">
           
@@ -230,7 +228,7 @@ export default function Settings() {
           </div>
 
           {loading ? (
-            <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-6 space-y-6 animate-pulse">
+            <div className="bg-white dark:bg-[#1e1e1e] border border-zinc-200/60 dark:border-zinc-800/80 rounded-2xl p-6 space-y-6捷 animate-pulse">
               <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3" />
               <div className="h-9 bg-zinc-100 dark:bg-zinc-800 rounded-xl" />
             </div>
@@ -250,7 +248,7 @@ export default function Settings() {
                       value={newPassword}
                       onChange={(e) => setNewPassword(e.target.value)}
                       placeholder="Mínimo 6 dígitos"
-                      className="w-full p-2.5 bg-white dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none"
+                      className="w-full p-2.5 bg-white dark:bg-[#121212] border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
                     />
                     <button type="submit" className="bg-amber-500 text-white text-xs font-bold py-2 px-4 rounded-xl">Salvar Senha</button>
                   </div>
@@ -260,17 +258,17 @@ export default function Settings() {
               <form onSubmit={handleSaveSettings} className="space-y-6">
                 
                 {/* Bloco: Usuário */}
-                <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-700/40">
+                <div className="bg-white dark:bg-[#1e1e1e] border border-zinc-200/60 dark:border-zinc-800/80 rounded-2xl p-4 md:p-6 shadow-xs space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800/60">
                     <User className="h-4 w-4 text-zinc-400" />
                     <h2 className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Perfil de Usuário</h2>
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="w-14 h-14 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
-                      {avatarUrl ? <img src={avatarUrl} className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-zinc-400" />}
+                    <div className="w-14 h-14 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-800 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                      {avatarUrl ? <img src={avatarUrl} className="w-full h-full object-cover" alt="Avatar" /> : <User className="h-5 w-5 text-zinc-400" />}
                     </div>
-                    <label className="text-center px-3 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
+                    <label className="text-center px-3 py-1.5 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs font-medium cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
                       <span>Alterar Foto</span>
                       <input type="file" accept="image/*" disabled={uploading} onChange={handleUploadAvatar} className="hidden" />
                     </label>
@@ -284,12 +282,12 @@ export default function Settings() {
                         required
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
+                        className="w-full p-2.5 bg-zinc-50 dark:bg-[#121212] border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
                       />
                     </div>
                     <div className="space-y-1.5">
                       <label className="text-xs font-medium text-zinc-400">E-mail (Login)</label>
-                      <input type="text" disabled value={user?.email || ""} className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs text-zinc-400 dark:text-zinc-500 outline-none" />
+                      <input type="text" disabled value={user?.email || ""} className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs text-zinc-400 dark:text-zinc-500 outline-none" />
                     </div>
                   </div>
 
@@ -301,8 +299,8 @@ export default function Settings() {
                 </div>
 
                 {/* Bloco: Estabelecimento */}
-                <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-700/40">
+                <div className="bg-white dark:bg-[#1e1e1e] border border-zinc-200/60 dark:border-zinc-800/80 rounded-2xl p-4 md:p-6 shadow-xs space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800/60">
                     <Building2 className="h-4 w-4 text-zinc-400" />
                     <h2 className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Estabelecimento</h2>
                   </div>
@@ -314,14 +312,14 @@ export default function Settings() {
                       required
                       value={companyName}
                       onChange={(e) => setCompanyName(e.target.value)}
-                      className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none"
+                      className="w-full p-2.5 bg-zinc-50 dark:bg-[#121212] border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-700"
                     />
                   </div>
                 </div>
 
                 {/* Bloco: Preferências */}
-                <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-700/40">
+                <div className="bg-white dark:bg-[#1e1e1e] border border-zinc-200/60 dark:border-zinc-800/80 rounded-2xl p-4 md:p-6 shadow-xs space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-800/60">
                     <Sliders className="h-4 w-4 text-zinc-400" />
                     <h2 className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Sistema</h2>
                   </div>
@@ -340,7 +338,7 @@ export default function Settings() {
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-700/40">
+                  <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-800/60">
                     <div>
                       <p className="text-xs font-medium">Tema do Painel</p>
                       <p className="text-[10px] text-zinc-400">Escolha a aparência da sua interface</p>
@@ -348,7 +346,7 @@ export default function Settings() {
                     <select
                       value={appTheme}
                       onChange={(e) => handleThemeChange(e.target.value)}
-                      className="p-1.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs focus:outline-none text-zinc-800 dark:text-white font-medium"
+                      className="p-1.5 bg-zinc-50 dark:bg-[#121212] border border-zinc-200 dark:border-zinc-800 rounded-xl text-xs focus:outline-none text-zinc-800 dark:text-white font-medium focus:border-zinc-400 dark:focus:border-zinc-700"
                     >
                       <option value="light">Modo Claro</option>
                       <option value="dark">Modo Escuro</option>
@@ -366,7 +364,7 @@ export default function Settings() {
                   <button
                     type="submit"
                     disabled={submitting || uploading}
-                    className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 font-semibold text-xs px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+                    className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 font-semibold text-xs px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-xs"
                   >
                     {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                     <span>Salvar Alterações</span>
