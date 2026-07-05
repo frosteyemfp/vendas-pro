@@ -58,7 +58,10 @@ export default function Settings() {
         setAvatarUrl(profile.avatar_url || "");
       }
 
-      if (!companyId) return;
+      if (!companyId) {
+        setLoading(false);
+        return;
+      }
 
       const { data, error } = await supabase
         .from("companies")
@@ -88,7 +91,7 @@ export default function Settings() {
     setTimeout(() => setToast({ show: false, message: "", type: "success" }), 4000);
   }
 
-  // CORREÇÃO: Mudado de "avatars" para "products" para bater com o seu Bucket do Supabase
+  // CORREÇÃO: Enviando diretamente para a raiz do bucket para evitar conflito com pastas restritas por RLS
   async function handleUploadAvatar(e) {
     try {
       setUploading(true);
@@ -96,7 +99,8 @@ export default function Settings() {
       if (!file) return;
 
       const fileExt = file.name.split('.').pop();
-      const filePath = `avatars/${user.id}-${Date.now()}.${fileExt}`;
+      // Salvando diretamente na raiz do bucket 'products' para obedecer à RLS de objetos livres
+      const filePath = `avatar-${user.id}-${Date.now()}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from("products") 
@@ -112,7 +116,7 @@ export default function Settings() {
       showToast("Foto carregada! Clique em Salvar para fixar as mudanças.");
     } catch (err) {
       console.error(err);
-      showToast("Não foi possível carregar a imagem de perfil. Verifique as permissões do Bucket.", "error");
+      showToast("Não foi possível carregar a imagem de perfil.", "error");
     } finally {
       setUploading(false);
     }
@@ -150,7 +154,7 @@ export default function Settings() {
 
       if (error) throw error;
 
-      showToast("Senha atualizada com sucesso!");
+      showToast("Senha updated com sucesso!");
       setNewPassword("");
       setShowPasswordResetForm(false);
     } catch (err) {
@@ -160,39 +164,55 @@ export default function Settings() {
     }
   }
 
-  // Salva alterações de Perfil e Empresa no Supabase
+  // CORREÇÃO MÁXIMA: Cria uma empresa caso o usuário não possua nenhuma vinculada ao perfil (company_id = null)
   async function handleSaveSettings(e) {
     e.preventDefault();
+    setSubmitting(true);
 
     try {
-      setSubmitting(true);
+      let currentCompanyId = companyId;
 
+      // Se o usuário não tem empresa cadastrada no perfil, insere uma nova agora
+      if (!currentCompanyId) {
+        const { data: newCompany, error: insertCompanyError } = await supabase
+          .from("companies")
+          .insert({ name: companyName.trim() || "Minha Loja" })
+          .select()
+          .single();
+
+        if (insertCompanyError) throw insertCompanyError;
+        currentCompanyId = newCompany.id;
+      } else {
+        // Se já tem, apenas atualiza o nome comercial existente
+        const { error: companyError } = await supabase
+          .from("companies")
+          .update({ name: companyName.trim() })
+          .eq("id", currentCompanyId);
+
+        if (companyError) throw companyError;
+      }
+
+      // Atualiza o Perfil vinculando ao ID da empresa (nova ou atual) e salvando o nome/avatar
       if (user?.id) {
         const { error: profileError } = await supabase
           .from("profiles")
           .update({ 
             name: username.trim(),
-            avatar_url: avatarUrl // Fixa a URL da imagem de perfil salva no banco
+            avatar_url: avatarUrl,
+            company_id: currentCompanyId 
           })
           .eq("id", user.id);
 
         if (profileError) throw profileError;
       }
 
-      if (companyId) {
-        const payload = {
-          name: companyName.trim()
-        };
+      showToast("Configurações salvas com sucesso!");
+      
+      // Força uma atualização da página após 1.5s para recarregar o novo contexto global do AuthContext
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
 
-        const { error: companyError } = await supabase
-          .from("companies")
-          .update(payload)
-          .eq("id", companyId);
-
-        if (companyError) throw companyError;
-      }
-
-      showToast("Configurações updated com sucesso!");
     } catch (err) {
       console.error("Erro ao salvar:", err);
       showToast("Falha ao salvar as modificações no servidor.", "error");
@@ -206,7 +226,7 @@ export default function Settings() {
       <Sidebar />
 
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold shadow-xl transition-all duration-300 animate-in fade-in slide-in-from-top-4 ${
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold shadow-xl transition-all duration-300 ${
           toast.type === "error" ? "bg-red-50 text-red-600 border border-red-100" : "bg-zinc-900 text-white"
         }`}>
           {toast.type === "error" ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
@@ -238,7 +258,7 @@ export default function Settings() {
               
               {/* FORMULÁRIO DE NOVA SENHA CASO VENHA DO LINK DE RECUPERAÇÃO */}
               {showPasswordResetForm && (
-                <form onSubmit={handleConfirmNewPassword} className="bg-amber-50/60 border border-amber-200 rounded-3xl p-6 space-y-4 animate-in zoom-in-95 duration-200">
+                <form onSubmit={handleConfirmNewPassword} className="bg-amber-50/60 border border-amber-200 rounded-3xl p-6 space-y-4">
                   <div className="flex items-center gap-2 pb-2 border-b border-amber-200">
                     <Key className="h-4 w-4 text-amber-600" />
                     <h2 className="text-xs font-bold text-amber-800 uppercase tracking-wider">Definir Nova Senha de Acesso</h2>
@@ -252,7 +272,7 @@ export default function Settings() {
                         value={newPassword}
                         onChange={(e) => setNewPassword(e.target.value)}
                         placeholder="Mínimo 6 dígitos"
-                        className="flex-1 p-2.5 bg-white border border-amber-300 rounded-xl text-xs font-medium focus:outline-none focus:border-amber-600 transition-all"
+                        className="flex-1 p-2.5 bg-white border border-amber-300 rounded-xl text-xs font-medium focus:outline-none"
                       />
                       <button
                         type="submit"
@@ -337,13 +357,14 @@ export default function Settings() {
 
                   <div className="grid grid-cols-1 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-gray-700">Nome Comercial da Empresa</label>
+                      <label className="text-xs font-semibold text-gray-700">Nome Comercial da Empresa / Loja</label>
                       <input
                         type="text"
+                        required
                         disabled={submitting}
                         value={companyName}
                         onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Ex: Minha Loja Pro LTDA"
+                        placeholder="Digite o nome da sua loja"
                         className="w-full p-2.5 bg-gray-50/50 border border-gray-200 rounded-xl text-xs font-medium focus:outline-none focus:bg-white focus:border-black transition-all"
                       />
                     </div>
@@ -370,11 +391,9 @@ export default function Settings() {
                         notifyStock ? "bg-black" : "bg-gray-200"
                       }`}
                     >
-                      <div
-                        className={`w-4 h-4 rounded-full bg-white shadow-xs transform transition-transform duration-200 ${
-                          notifyStock ? "translate-x-4" : "translate-x-0"
-                        }`}
-                    />
+                      <div className={`w-4 h-4 rounded-full bg-white shadow-xs transform transition-transform duration-200 ${
+                        notifyStock ? "translate-x-4" : "translate-x-0"
+                      }`} />
                     </button>
                   </div>
 
