@@ -1,54 +1,39 @@
 @import "tailwindcss";
 
 @theme {
-  /* Cores premium inspiradas na Stripe e Linear */
-  --color-brand-slate-50: #FAFAFA;
-  --color-brand-slate-100: #F4F4F5;
-  --color-brand-slate-200: #E4E4E7;
-  --color-brand-slate-300: #D4D4D8;
-  --color-brand-slate-400: #A1A1AA;
-  --color-brand-slate-500: #71717A;
-  --color-brand-slate-600: #52525B;
-  --color-brand-slate-700: #3F3F46;
-  --color-brand-slate-800: #27272A;
-  --color-brand-slate-900: #18181B;
-  --color-brand-slate-950: #09090B;
-
-  --color-brand-accent-indigo: #6366F1;
-  --color-brand-accent-emerald: #10B981;
-  --color-brand-accent-rose: #EF4444;
-  --color-brand-accent-amber: #F59E0B;
-
-  /* Sombras e bordas customizadas */
-  --shadow-premium: 0 1px 3px 0 rgba(0, 0, 0, 0.05), 0 1px 2px -1px rgba(0, 0, 0, 0.05);
-  --shadow-premium-md: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -2px rgba(0, 0, 0, 0.05);
-  --shadow-premium-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.04), 0 4px 6px -4px rgba(0, 0, 0, 0.04);
-
-  --radius-premium-xl: 14px;
-  --radius-premium-2xl: 18px;
+  /* Tons oficiais inspirados no modo escuro do ChatGPT */
+  --color-chat-bg-light: #FFFFFF;
+  --color-chat-bg-dark: #212121; /* Cinza dos cards do ChatGPT */
+  --color-chat-input-dark: #2f2f2f;
+  --color-chat-sidebar-dark: #171717; /* Lateral escura do ChatGPT */
+  --color-chat-main-dark: #212121;
+  
+  /* Sombras e bordas limpas */
+  --shadow-premium: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-premium-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 /* Ativação do Modo Escuro via classe HTML no Tailwind v4 */
 @variant dark (&:where(.dark, .dark *));
 
-/* Configurações de layout padrão integradas ao ecossistema do Tailwind */
 @layer base {
   body {
-    background-color: var(--color-brand-slate-50);
-    color: var(--color-brand-slate-900);
-    font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--color-chat-bg-light);
+    color: #0f172a;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
     -webkit-font-smoothing: antialiased;
     transition-property: color, background-color;
-    transition-duration: 300ms;
+    transition-duration: 200ms;
   }
 
+  /* Quando a classe .dark estiver ativa, aplica o tema escuro do ChatGPT globalmente */
   .dark body {
-    background-color: var(--color-brand-slate-950);
-    color: var(--color-brand-slate-50);
+    background-color: var(--color-chat-main-dark);
+    color: #ececec;
   }
 }
 
-/* Custom Scrollbar minimalista padrão Linear */
+/* Custom Scrollbar minimalista */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -57,9 +42,9 @@
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background-color: var(--color-brand-slate-200);
+  background-color: #e2e8f0;
   border-radius: 9999px;
 }
 .dark ::-webkit-scrollbar-thumb {
-  background-color: var(--color-brand-slate-800);
+  background-color: #3f3f46;
 }

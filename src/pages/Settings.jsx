@@ -23,32 +23,26 @@ export default function Settings() {
   const [uploading, setUploading] = useState(false);
   const [toast, setToast] = useState({ show: false, message: "", type: "success" });
 
-  // Estado do campo de configurações da Empresa
   const [companyName, setCompanyName] = useState("");
   const [appTheme, setAppTheme] = useState("light");
   const [notifyStock, setNotifyStock] = useState(true);
 
-  // Perfil do Usuário
   const [username, setUsername] = useState("");
   const [avatarUrl, setAvatarUrl] = useState("");
 
-  // Estado para controlar a exibição dos campos de Nova Senha de forma visível
   const [showPasswordResetForm, setShowPasswordResetForm] = useState(false);
   const [newPassword, setNewPassword] = useState("");
 
-  // --- ESCUTA SE O USUÁRIO VEIO PELO LINK DO ESQUECI A SENHA ---
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === 'PASSWORD_RECOVERY') {
         setShowPasswordResetForm(true);
-        showToast("Link validado! Digite sua nova senha no campo abaixo.", "success");
+        showToast("Link validado! Digite sua nova senha abaixo.", "success");
       }
     });
-
     return () => subscription.unsubscribe();
   }, []);
 
-  // --- CONTROLE EM TEMPO REAL DO MODO ESCURO ---
   useEffect(() => {
     const localTheme = localStorage.getItem("theme") || "light";
     setAppTheme(localTheme);
@@ -59,7 +53,6 @@ export default function Settings() {
     }
   }, []);
 
-  // Função para mudar o tema visual imediatamente na tela
   function handleThemeChange(newTheme) {
     setAppTheme(newTheme);
     localStorage.setItem("theme", newTheme);
@@ -70,21 +63,17 @@ export default function Settings() {
     }
   }
 
-  // Carrega as configurações da empresa e dados do perfil
   async function loadSettings() {
     try {
       setLoading(true);
-      
       if (profile) {
         setUsername(profile.name || "");
         setAvatarUrl(profile.avatar_url || "");
       }
-
       if (!companyId) {
         setLoading(false);
         return;
       }
-
       const { data, error } = await supabase
         .from("companies")
         .select("*")
@@ -92,13 +81,10 @@ export default function Settings() {
         .single();
 
       if (error && error.code !== "PGRST116") throw error;
-
-      if (data) {
-        setCompanyName(data.name || "");
-      }
+      if (data) setCompanyName(data.name || "");
     } catch (err) {
-      console.error("Erro ao carregar configurações:", err);
-      showToast("Não foi possível carregar os parâmetros do sistema.", "error");
+      console.error(err);
+      showToast("Não foi possível carregar os parâmetros.", "error");
     } finally {
       setLoading(false);
     }
@@ -113,7 +99,6 @@ export default function Settings() {
     setTimeout(() => setToast({ show: false, message: "", type: "success" }), 4000);
   }
 
-  // Upload direto para o Storage do Supabase
   async function handleUploadAvatar(e) {
     try {
       setUploading(true);
@@ -134,16 +119,14 @@ export default function Settings() {
         .getPublicUrl(filePath);
 
       setAvatarUrl(publicUrl);
-      showToast("Foto carregada! Clique em Salvar para fixar as mudanças.");
+      showToast("Foto carregada! Clique em Salvar.");
     } catch (err) {
-      console.error(err);
-      showToast("Não foi possível carregar a imagem de perfil.", "error");
+      showToast("Não foi possível carregar a imagem.", "error");
     } finally {
       setUploading(false);
     }
   }
 
-  // Enviar link de redefinição de senha por e-mail
   async function handleResetPassword() {
     try {
       setSubmitting(true);
@@ -151,7 +134,7 @@ export default function Settings() {
         redirectTo: window.location.href,
       });
       if (error) throw error;
-      showToast("E-mail de redefinição enviado! Verifique sua caixa de entrada.");
+      showToast("E-mail enviado! Verifique sua caixa de entrada.");
     } catch (err) {
       showToast("Falha ao solicitar troca de senha.", "error");
     } finally {
@@ -159,49 +142,37 @@ export default function Settings() {
     }
   }
 
-  // Executa a troca definitiva da senha no servidor
   async function handleConfirmNewPassword(e) {
     e.preventDefault();
     if (!newPassword || newPassword.length < 6) {
-      showToast("A senha precisa ter no mínimo 6 caracteres.", "error");
+      showToast("Mínimo de 6 caracteres.", "error");
       return;
     }
-
     try {
       setSubmitting(true);
-      const { error } = await supabase.auth.updateUser({
-        password: newPassword
-      });
-
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-
-      showToast("Senha updated com sucesso!");
+      showToast("Senha atualizada!");
       setNewPassword("");
       setShowPasswordResetForm(false);
     } catch (err) {
-      showToast("Erro ao atualizar a senha: " + err.message, "error");
+      showToast(err.message, "error");
     } finally {
       setSubmitting(false);
     }
   }
 
-  // Salva as alterações de Perfil e Empresa (Corrigido o problema de Foreign Key)
   async function handleSaveSettings(e) {
     e.preventDefault();
     setSubmitting(true);
-
     try {
       let currentCompanyId = companyId;
 
       if (!currentCompanyId) {
         const { data: newCompany, error: insertCompanyError } = await supabase
           .from("companies")
-          .insert({ 
-            name: companyName.trim() || "Minha Loja",
-            id: user?.id 
-          })
-          .select()
-          .single();
+          .insert({ name: companyName.trim() || "Minha Loja", id: user?.id })
+          .select().single();
 
         if (insertCompanyError) throw insertCompanyError;
         currentCompanyId = newCompany.id;
@@ -210,254 +181,195 @@ export default function Settings() {
           .from("companies")
           .update({ name: companyName.trim() })
           .eq("id", currentCompanyId);
-
         if (companyError) throw companyError;
       }
 
       if (user?.id) {
         const { error: profileError } = await supabase
           .from("profiles")
-          .update({ 
-            name: username.trim(),
-            avatar_url: avatarUrl,
-            company_id: currentCompanyId 
-          })
+          .update({ name: username.trim(), avatar_url: avatarUrl, company_id: currentCompanyId })
           .eq("id", user.id);
-
         if (profileError) throw profileError;
       }
 
-      showToast("Configurações salvas com sucesso!");
-      
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-
+      showToast("Configurações salvas!");
+      setTimeout(() => window.location.reload(), 1000);
     } catch (err) {
-      console.error("Erro ao salvar:", err);
-      showToast("Falha ao salvar as modificações no servidor.", "error");
+      showToast("Falha ao salvar as modificações.", "error");
     } finally {
       setSubmitting(false);
     }
   }
 
   return (
-    <div className="flex min-h-screen bg-brand-slate-50 dark:bg-brand-slate-950 text-brand-slate-900 dark:text-brand-slate-100 font-sans antialiased select-none transition-colors duration-300">
+    // Fundo dinâmico: branco no claro, cinza-chatgpt no escuro
+    <div className="flex min-h-screen bg-neutral-50 dark:bg-[#212121] text-zinc-900 dark:text-[#ececec] font-sans antialiased transition-colors duration-200">
       <Sidebar />
 
       {toast.show && (
-        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold shadow-premium-lg transition-all duration-300 ${
+        <div className={`fixed top-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-xl text-xs font-semibold shadow-premium-md ${
           toast.type === "error" 
-            ? "bg-brand-accent-rose/10 text-brand-accent-rose border border-brand-accent-rose/20 dark:bg-brand-accent-rose/20" 
-            : "bg-brand-slate-900 text-white border border-brand-slate-800 dark:bg-brand-slate-100 dark:text-brand-slate-950"
+            ? "bg-red-500 text-white" 
+            : "bg-zinc-900 text-white dark:bg-zinc-100 dark:text-zinc-950"
         }`}>
           {toast.type === "error" ? <AlertCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
           <span>{toast.message}</span>
         </div>
       )}
 
-      <main className="flex-1 p-4 md:p-10 ml-0 md:ml-64 pb-32 md:pb-10 transition-all duration-300">
-        <div className="max-w-3xl mx-auto space-y-6">
+      {/* CORREÇÃO MOBILE: 'pt-24' garante que o menu superior dos 3 pontos nunca tampe o conteúdo */}
+      <main className="flex-1 p-4 md:p-10 ml-0 md:ml-64 pt-24 md:pt-10 pb-24 transition-all duration-200">
+        <div className="max-w-2xl mx-auto space-y-6">
           
-          <div className="pt-14 md:pt-0">
-            <h1 className="text-xl md:text-2xl font-bold text-brand-slate-900 dark:text-white flex items-center gap-2">
-              <SettingsIcon className="h-5 w-5 md:h-6 md:w-6 text-brand-slate-800 dark:text-brand-slate-200 shrink-0" />
+          <div>
+            <h1 className="text-xl md:text-2xl font-semibold text-zinc-950 dark:text-white flex items-center gap-2">
+              <SettingsIcon className="h-5 w-5 md:h-6 md:w-6 text-zinc-800 dark:text-zinc-200" />
               <span>Configurações</span>
             </h1>
-            <p className="text-[11px] md:text-xs text-brand-slate-400 dark:text-brand-slate-500 font-medium">Controle os parâmetros de comportamento do seu aplicativo</p>
+            <p className="text-xs text-zinc-500 dark:text-zinc-400 font-medium">Gerencie suas preferências de conta e aplicativo</p>
           </div>
 
           {loading ? (
-            <div className="bg-white dark:bg-brand-slate-900 border border-brand-slate-100 dark:border-brand-slate-800/60 rounded-2xl p-6 md:p-8 space-y-6 animate-pulse shadow-premium">
-              <div className="h-4 bg-brand-slate-100 dark:bg-brand-slate-800 rounded w-1/3" />
-              <div className="space-y-3">
-                <div className="h-9 bg-brand-slate-50 dark:bg-brand-slate-800/50 rounded-xl" />
-                <div className="h-9 bg-brand-slate-50 dark:bg-brand-slate-800/50 rounded-xl" />
-              </div>
+            <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-6 space-y-6 animate-pulse">
+              <div className="h-4 bg-zinc-200 dark:bg-zinc-700 rounded w-1/3" />
+              <div className="h-9 bg-zinc-100 dark:bg-zinc-800 rounded-xl" />
             </div>
           ) : (
-            <div className="space-y-6 animate-in fade-in duration-300">
+            <div className="space-y-6">
               
               {showPasswordResetForm && (
-                <form onSubmit={handleConfirmNewPassword} className="bg-brand-accent-amber/5 dark:bg-brand-accent-amber/10 border border-brand-accent-amber/20 rounded-2xl p-4 md:p-6 space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-brand-accent-amber/10">
-                    <Key className="h-4 w-4 text-brand-accent-amber" />
-                    <h2 className="text-xs font-bold text-brand-accent-amber uppercase tracking-wider">Definir Nova Senha de Acesso</h2>
+                <form onSubmit={handleConfirmNewPassword} className="bg-amber-500/10 border border-amber-500/20 rounded-2xl p-4 space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-amber-500/10">
+                    <Key className="h-4 w-4 text-amber-500" />
+                    <h2 className="text-xs font-bold text-amber-500 uppercase tracking-wider">Definir Nova Senha</h2>
                   </div>
                   <div className="space-y-1.5 max-w-sm">
-                    <label className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">Nova Senha</label>
-                    <div className="flex flex-col sm:flex-row gap-2">
-                      <input
-                        type="password"
-                        required
-                        value={newPassword}
-                        onChange={(e) => setNewPassword(e.target.value)}
-                        placeholder="Mínimo 6 dígitos"
-                        className="w-full p-2.5 bg-white dark:bg-brand-slate-850 border border-brand-slate-200 dark:border-brand-slate-800 rounded-xl text-xs font-medium focus:outline-none dark:text-white"
-                      />
-                      <button
-                        type="submit"
-                        disabled={submitting}
-                        className="w-full sm:w-auto bg-brand-accent-amber text-white text-xs font-bold py-2.5 px-4 rounded-xl transition-all hover:opacity-90 disabled:opacity-50"
-                      >
-                        {submitting ? "Alterando..." : "Salvar Senha"}
-                      </button>
-                    </div>
+                    <input
+                      type="password"
+                      required
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                      placeholder="Mínimo 6 dígitos"
+                      className="w-full p-2.5 bg-white dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none"
+                    />
+                    <button type="submit" className="bg-amber-500 text-white text-xs font-bold py-2 px-4 rounded-xl">Salvar Senha</button>
                   </div>
                 </form>
               )}
 
               <form onSubmit={handleSaveSettings} className="space-y-6">
                 
-                {/* Bloco: Perfil da Conta do Usuário */}
-                <div className="bg-white dark:bg-brand-slate-900 border border-brand-slate-100 dark:border-brand-slate-850 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-brand-slate-50 dark:border-brand-slate-800">
-                    <User className="h-4 w-4 text-brand-slate-400 dark:text-brand-slate-500" />
-                    <h2 className="text-xs font-bold text-brand-slate-800 dark:text-brand-slate-200 uppercase tracking-wider">Meu Perfil de Usuário</h2>
+                {/* Bloco: Usuário */}
+                <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-700/40">
+                    <User className="h-4 w-4 text-zinc-400" />
+                    <h2 className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Perfil de Usuário</h2>
                   </div>
 
-                  <div className="flex flex-col sm:flex-row items-center gap-4 pb-2">
-                    <div className="relative w-16 h-16 rounded-full overflow-hidden border border-brand-slate-200 dark:border-brand-slate-800 bg-brand-slate-50 dark:bg-brand-slate-800 flex items-center justify-center shrink-0">
-                      {avatarUrl ? <img src={avatarUrl} className="w-full h-full object-cover" /> : <User className="h-6 w-6 text-brand-slate-400" />}
+                  <div className="flex items-center gap-4">
+                    <div className="w-14 h-14 rounded-full overflow-hidden border border-zinc-200 dark:border-zinc-700 bg-zinc-100 dark:bg-zinc-800 flex items-center justify-center shrink-0">
+                      {avatarUrl ? <img src={avatarUrl} className="w-full h-full object-cover" /> : <User className="h-5 w-5 text-zinc-400" />}
                     </div>
-                    <label className="w-full sm:w-auto text-center px-3 py-2 border border-brand-slate-200 dark:border-brand-slate-800 rounded-xl text-xs font-bold text-brand-slate-600 dark:text-brand-slate-400 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-800 cursor-pointer flex items-center justify-center gap-1.5 transition-all">
-                      {uploading ? <Loader2 className="h-3.5 w-3.5 animate-spin text-brand-slate-400" /> : <UploadCloud className="h-3.5 w-3.5" />}
-                      <span>Alterar Foto de Perfil</span>
-                      <input type="file" accept="image/*" disabled={uploading || submitting} onChange={handleUploadAvatar} className="hidden" />
+                    <label className="text-center px-3 py-1.5 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs font-medium cursor-pointer hover:bg-zinc-50 dark:hover:bg-zinc-800 transition-all">
+                      <span>Alterar Foto</span>
+                      <input type="file" accept="image/*" disabled={uploading} onChange={handleUploadAvatar} className="hidden" />
                     </label>
                   </div>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">Nome de Usuário (Apelido)</label>
+                      <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Seu Nome</label>
                       <input
                         type="text"
                         required
-                        disabled={submitting}
                         value={username}
                         onChange={(e) => setUsername(e.target.value)}
-                        placeholder="Ex: André Silva"
-                        className="w-full p-2.5 bg-brand-slate-50/50 dark:bg-brand-slate-850 border border-brand-slate-200 dark:border-brand-slate-800 rounded-xl text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-brand-slate-900 focus:border-brand-slate-900 dark:focus:border-brand-slate-100 transition-all dark:text-white"
+                        className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none focus:border-zinc-400 dark:focus:border-zinc-500"
                       />
                     </div>
                     <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">E-mail de Login (Imutável)</label>
-                      <input
-                        type="text"
-                        disabled
-                        value={user?.email || ""}
-                        className="w-full p-2.5 bg-brand-slate-100 dark:bg-brand-slate-800 border border-brand-slate-200 dark:border-brand-slate-800 rounded-xl text-xs font-medium text-brand-slate-400 dark:text-brand-slate-500 outline-none"
-                      />
+                      <label className="text-xs font-medium text-zinc-400">E-mail (Login)</label>
+                      <input type="text" disabled value={user?.email || ""} className="w-full p-2.5 bg-zinc-100 dark:bg-zinc-800 border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs text-zinc-400 dark:text-zinc-500 outline-none" />
                     </div>
                   </div>
 
-                  {/* Segurança / Senha por E-mail */}
-                  <div className="pt-4 border-t border-brand-slate-50 dark:border-brand-slate-800 space-y-2">
-                    <div className="flex flex-col">
-                      <span className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">Segurança da Conta</span>
-                      <span className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500">Clique para enviar um link de alteração de senha segura diretamente para o seu e-mail.</span>
-                    </div>
-                    <button
-                      type="button"
-                      disabled={submitting || uploading}
-                      onClick={handleResetPassword}
-                      className="w-full sm:w-auto py-2.5 px-4 border border-brand-slate-200 dark:border-brand-slate-800 bg-white dark:bg-brand-slate-900 text-brand-slate-700 dark:text-brand-slate-300 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 hover:bg-brand-slate-50 dark:hover:bg-brand-slate-800 disabled:opacity-50"
-                    >
-                      <Key className="h-3.5 w-3.5 text-brand-slate-400 dark:text-brand-slate-500" />
-                      <span>Solicitar Nova Senha por E-mail</span>
+                  <div className="pt-2">
+                    <button type="button" onClick={handleResetPassword} className="text-xs text-zinc-500 dark:text-zinc-400 hover:underline flex items-center gap-1.5">
+                      <Key className="h-3 w-3" /> Alterar minha senha por e-mail
                     </button>
                   </div>
                 </div>
 
-                {/* Bloco: Perfil do Estabelecimento */}
-                <div className="bg-white dark:bg-brand-slate-900 border border-brand-slate-100 dark:border-brand-slate-850 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-brand-slate-50 dark:border-brand-slate-800">
-                    <Building2 className="h-4 w-4 text-brand-slate-400 dark:text-brand-slate-500" />
-                    <h2 className="text-xs font-bold text-brand-slate-800 dark:text-brand-slate-200 uppercase tracking-wider">Dados do Estabelecimento</h2>
+                {/* Bloco: Estabelecimento */}
+                <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-700/40">
+                    <Building2 className="h-4 w-4 text-zinc-400" />
+                    <h2 className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Estabelecimento</h2>
                   </div>
 
-                  <div className="grid grid-cols-1 gap-4">
-                    <div className="space-y-1.5">
-                      <label className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">Nome Comercial da Empresa / Loja</label>
-                      <input
-                        type="text"
-                        required
-                        disabled={submitting}
-                        value={companyName}
-                        onChange={(e) => setCompanyName(e.target.value)}
-                        placeholder="Digite o nome da sua loja"
-                        className="w-full p-2.5 bg-brand-slate-50/50 dark:bg-brand-slate-850 border border-brand-slate-200 dark:border-brand-slate-800 rounded-xl text-xs font-medium focus:outline-none focus:bg-white dark:focus:bg-brand-slate-900 focus:border-brand-slate-900 dark:focus:border-brand-slate-100 transition-all dark:text-white"
-                      />
-                    </div>
+                  <div className="space-y-1.5">
+                    <label className="text-xs font-medium text-zinc-600 dark:text-zinc-300">Nome Comercial do Negócio</label>
+                    <input
+                      type="text"
+                      required
+                      value={companyName}
+                      onChange={(e) => setCompanyName(e.target.value)}
+                      className="w-full p-2.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs dark:text-white focus:outline-none"
+                    />
                   </div>
                 </div>
 
-                {/* Bloco: Preferências Técnicas e de Interface */}
-                <div className="bg-white dark:bg-brand-slate-900 border border-brand-slate-100 dark:border-brand-slate-850 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
-                  <div className="flex items-center gap-2 pb-2 border-b border-brand-slate-50 dark:border-brand-slate-800">
-                    <Sliders className="h-4 w-4 text-brand-slate-400 dark:text-brand-slate-500" />
-                    <h2 className="text-xs font-bold text-brand-slate-800 dark:text-brand-slate-200 uppercase tracking-wider">Preferências Gerais</h2>
+                {/* Bloco: Preferências */}
+                <div className="bg-white dark:bg-[#2f2f2f] border border-zinc-200/60 dark:border-zinc-700/50 rounded-2xl p-4 md:p-6 shadow-premium space-y-4">
+                  <div className="flex items-center gap-2 pb-2 border-b border-zinc-100 dark:border-zinc-700/40">
+                    <Sliders className="h-4 w-4 text-zinc-400" />
+                    <h2 className="text-xs font-bold uppercase text-zinc-500 dark:text-zinc-400 tracking-wider">Sistema</h2>
                   </div>
 
                   <div className="flex items-center justify-between py-1">
-                    <div className="flex flex-col pr-2">
-                      <span className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">Notificações de Estoque Mínimo</span>
-                      <span className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500">Exibir avisos em tela quando produtos estiverem esgotando</span>
+                    <div>
+                      <p className="text-xs font-medium">Alertas de Estoque Crítico</p>
+                      <p className="text-[10px] text-zinc-400">Notificar quando os produtos estiverem acabando</p>
                     </div>
                     <button
                       type="button"
-                      disabled={submitting}
                       onClick={() => setNotifyStock(!notifyStock)}
-                      className={`w-9 h-5 rounded-full p-0.5 transition-colors duration-200 focus:outline-none shrink-0 ${
-                        notifyStock ? "bg-brand-slate-900 dark:bg-brand-slate-100" : "bg-brand-slate-200 dark:bg-brand-slate-800"
-                      }`}
+                      className={`w-9 h-5 rounded-full p-0.5 transition-colors ${notifyStock ? "bg-emerald-500" : "bg-zinc-300 dark:bg-zinc-700"}`}
                     >
-                      <div className={`w-4 h-4 rounded-full bg-white dark:bg-brand-slate-950 shadow-premium transform transition-transform duration-200 ${
-                        notifyStock ? "translate-x-4" : "translate-x-0"
-                      }`} />
+                      <div className={`w-4 h-4 rounded-full bg-white transition-transform ${notifyStock ? "translate-x-4" : "translate-x-0"}`} />
                     </button>
                   </div>
 
-                  <div className="flex items-center justify-between pt-3 border-t border-brand-slate-50 dark:border-brand-slate-800">
-                    <div className="flex flex-col pr-2">
-                      <span className="text-xs font-semibold text-brand-slate-700 dark:text-brand-slate-300">Tema da Interface</span>
-                      <span className="text-[10px] text-brand-slate-400 dark:text-brand-slate-500">Escolha o visual padrão do painel de controle</span>
+                  <div className="flex items-center justify-between pt-3 border-t border-zinc-100 dark:border-zinc-700/40">
+                    <div>
+                      <p className="text-xs font-medium">Tema do Painel</p>
+                      <p className="text-[10px] text-zinc-400">Escolha a aparência da sua interface</p>
                     </div>
                     <select
-                      disabled={submitting}
                       value={appTheme}
                       onChange={(e) => handleThemeChange(e.target.value)}
-                      className="p-2 bg-brand-slate-50 dark:bg-brand-slate-850 border border-brand-slate-100 dark:border-brand-slate-800 rounded-xl text-xs font-semibold focus:outline-none min-w-[120px] max-w-[140px] dark:text-white"
+                      className="p-1.5 bg-zinc-50 dark:bg-[#212121] border border-zinc-200 dark:border-zinc-700 rounded-xl text-xs focus:outline-none text-zinc-800 dark:text-white font-medium"
                     >
-                      <option value="light">Claro</option>
-                      <option value="dark">Escuro</option>
+                      <option value="light">Modo Claro</option>
+                      <option value="dark">Modo Escuro</option>
                     </select>
                   </div>
                 </div>
 
-                {/* Botão de Envio Inferior */}
+                {/* Ações Inferiores */}
                 <div className="flex flex-col sm:flex-row items-center justify-end gap-4 pt-2">
-                  <div className="flex items-center gap-1.5 text-[10px] text-brand-slate-400 dark:text-brand-slate-500 font-medium mr-auto text-center sm:text-left">
-                    <ShieldCheck className="h-3.5 w-3.5 text-brand-slate-400 dark:text-brand-slate-600 shrink-0" />
-                    <span>Seus dados estão protegidos criptograficamente de ponta a ponta.</span>
+                  <div className="flex items-center gap-1.5 text-[10px] text-zinc-400 mr-auto">
+                    <ShieldCheck className="h-3.5 w-3.5" />
+                    <span>Configurações sincronizadas com criptografia Supabase.</span>
                   </div>
                   
                   <button
                     type="submit"
                     disabled={submitting || uploading}
-                    className="w-full sm:w-auto bg-brand-slate-900 hover:bg-brand-slate-800 text-white dark:bg-brand-slate-100 dark:text-brand-slate-950 dark:hover:bg-brand-slate-200 font-bold text-xs px-5 py-3 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2 shadow-premium-md"
+                    className="w-full sm:w-auto bg-zinc-900 hover:bg-zinc-800 text-white dark:bg-zinc-100 dark:text-zinc-950 dark:hover:bg-zinc-200 font-semibold text-xs px-5 py-2.5 rounded-xl transition-all disabled:opacity-50 flex items-center justify-center gap-2"
                   >
-                    {submitting ? (
-                      <>
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                        <span>Salvando alterações...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Save className="h-3.5 w-3.5" />
-                        <span>Salvar Configurações</span>
-                      </>
-                    )}
+                    {submitting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
+                    <span>Salvar Alterações</span>
                   </button>
                 </div>
 
